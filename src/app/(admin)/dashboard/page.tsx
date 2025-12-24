@@ -1,13 +1,22 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+import { useAppSelector } from "@/store/hooks";
 
-export default async function Dashboard() {
-  const supabase = await createClient();
+export default function DashboardPage() {
+  const { profile, isLoading } = useAppSelector((state) => state.user);
 
-  const { data: user } = await supabase.from("users").select("*").single();
+  if (isLoading) return <p>Loading...</p>;
+
+  if (!profile) {
+    return <p>Unauthorized</p>;
+  }
+
   return (
-    <div className="w-full p-5 flex flex-col gap-10">
-      <h1>Ini Dashboard</h1>
-      <p>{JSON.stringify(user)}</p>
+    <div>
+      <h1>Dashboard</h1>
+      <p>Nama: {profile.full_name}</p>
+      <p>Role: {profile.role}</p>
+      <p>Email: {profile.email}</p>
+      <p>Avatar: {profile.avatar_url}</p>
     </div>
   );
 }
