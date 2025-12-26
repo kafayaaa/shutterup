@@ -1,5 +1,6 @@
 "use client";
 import { useAppSelector } from "@/store/hooks";
+import { redirect } from "next/navigation";
 
 export default function DashboardPage() {
   const { profile, isLoading } = useAppSelector((state) => state.user);
@@ -7,7 +8,7 @@ export default function DashboardPage() {
   if (isLoading) return <p>Loading...</p>;
 
   if (!profile) {
-    return <p>Unauthorized</p>;
+    redirect("/");
   }
 
   return (
