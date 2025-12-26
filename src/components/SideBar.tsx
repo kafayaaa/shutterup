@@ -1,18 +1,46 @@
-import Link from "next/link";
+"use client";
+
 import LogoutButton from "./LogoutButton";
+import DashboardButton from "./DashboardButton";
+import { RiHomeLine } from "react-icons/ri";
+import { BsBox } from "react-icons/bs";
+import { usePathname } from "next/navigation";
+import ToggleTheme from "./ToggleTheme";
 
 export default function SideBar() {
+  const pathname = usePathname();
+  const isDashboard = pathname === "/dashboard";
+  const isProducts = pathname.includes("products");
   return (
-    <div className="w-full min-h-screen p-5 text-zinc-950 dark:text-zinc-50 bg-zinc-50 dark:bg-zinc-950 border-r">
-      <div className="flex flex-col gap-5">
-        <div>
-          <h1>Ini SideBar</h1>
+    <div className="w-full h-screen p-5 border-r border-zinc-200 dark:border-zinc-800">
+      <div className="h-full flex flex-col justify-between gap-5">
+        <div className="flex flex-col gap-5">
+          <div className="self-center">
+            <h1 className="text-2xl font-extrabold font-fira-code">
+              ShutterUp
+            </h1>
+          </div>
+          <div className="flex flex-col gap-2">
+            <DashboardButton
+              href="/dashboard"
+              icon={<RiHomeLine className="text-lg" />}
+              text="Dashboard"
+              isActive={isDashboard}
+            />
+            <DashboardButton
+              href="/dashboard/products"
+              icon={<BsBox className="text-lg" />}
+              text="Products"
+              isActive={isProducts}
+            />
+          </div>
         </div>
-      </div>
-      <div className="flex flex-col gap-3">
-        <button>dashboard</button>
-        <Link href="/dashboard/products">products</Link>
-        <LogoutButton />
+        <div className="self-center flex flex-col gap-2">
+          <div className="w-fit">
+            <ToggleTheme />
+          </div>
+          <LogoutButton />
+        </div>
       </div>
     </div>
   );
