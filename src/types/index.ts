@@ -20,8 +20,8 @@ export interface Product {
   condition: "new" | "used";
   rating_avg: number;
   rating_count: number;
-  discount_type: "fixed" | "percentage";
-  discount_value: number;
+  discount_type: "fixed" | "percentage" | null;
+  discount_value: number | string;
   discount_active: boolean;
   final_price: number;
 }
@@ -36,7 +36,9 @@ export interface CreateProductInput {
   description?: string;
   status: "active" | "inactive";
   condition: "new" | "used";
-  discount_type?: "percentage" | "fixed";
+  discount_type?: "percentage" | "fixed" | null;
   discount_value?: number;
   discount_active?: boolean;
 }
+
+export type UpdateProductPayload = Omit<Product, "user_id">;
