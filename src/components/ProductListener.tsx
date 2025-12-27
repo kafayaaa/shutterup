@@ -1,27 +1,31 @@
 "use client";
 
 import { useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { useAppDispatch } from "@/store/hooks";
 import { setProducts } from "@/store/slices/productSlice";
+import { supabasePublic } from "@/lib/supabase/public";
 
 export default function ProductListener() {
   const dispatch = useAppDispatch();
-  const supabase = createClient();
 
   useEffect(() => {
     const loadProducts = async () => {
-      const { data, error: errorUser } = await supabase.auth.getUser();
-      if (!data.user) {
-        throw new Error(errorUser?.message);
-      }
+      try {
+        const { data, error } = await supabasePublic
+          .from("products")
+          .select("*")
+          .eq("status", "active")
+          .order("created_at", { ascending: false });
 
-      const { data: products, error } = await supabase
-        .from("products")
-        .select("*");
+        if (error) {
+          console.error("Supabase error:", error);
+          throw new Error("Failed to load product" + error.message);
+        }
 
-      if (!error && products) {
-        dispatch(setProducts(products));
+        dispatch(setProducts(data ?? []));
+      } catch (error) {
+        console.error("Load products error:", error);
+        dispatch(setProducts([])); // STOP loading
       }
     };
 

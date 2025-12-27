@@ -3,6 +3,7 @@ import userReducer from "./slices/userSlice";
 import productReducer from "./slices/productSlice";
 import imageReducer from "./slices/imageSlice";
 import uiReducer from "./slices/uiSlice";
+import cartReducer from "./slices/cartSlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     product: productReducer,
     image: imageReducer,
     ui: uiReducer,
+    cart: cartReducer,
   },
 });
 
