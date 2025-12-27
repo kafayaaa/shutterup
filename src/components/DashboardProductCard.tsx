@@ -20,7 +20,10 @@ import { UpdateProductPayload } from "@/types";
 import { resetImages } from "@/store/slices/imageSlice";
 import { updateProduct as updateProductSlice } from "@/store/slices/productSlice";
 import { store } from "@/store";
-import { uploadProductImage } from "@/services/upload.service";
+import {
+  deleteProductImages,
+  uploadProductImage,
+} from "@/services/upload.service";
 
 type Status = "active" | "inactive";
 type ProductCategory = "body" | "lens" | "fullset" | "accessories";
@@ -146,6 +149,14 @@ export default function DashboardProductCard({
       const existingUrls = imagesState
         .filter((img) => img.type === "existing")
         .map((img) => img.url);
+
+      const deletedUrls = image_urls.filter(
+        (url) => !existingUrls.includes(url)
+      );
+
+      if (deletedUrls.length > 0) {
+        await deleteProductImages(deletedUrls);
+      }
 
       const newFiles = imagesState
         .filter((img) => img.type === "new" && img.file)
