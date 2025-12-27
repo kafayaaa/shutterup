@@ -2,29 +2,70 @@
 
 import Image from "next/image";
 import { useCallback, useState } from "react";
-import { FaRegEdit } from "react-icons/fa";
-import { FaPenToSquare, FaStar, FaTag, FaTrash } from "react-icons/fa6";
-import Autoplay from "embla-carousel-autoplay";
+import { FaPenToSquare, FaStar, FaTrash } from "react-icons/fa6";
 import useEmblaCarousel from "embla-carousel-react";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-import { useAppDispatch } from "@/store/hooks";
-import { deleteProduct } from "@/services/product.service";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { deleteProduct, updateProduct } from "@/services/product.service";
 import { removeProduct } from "@/store/slices/productSlice";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "./ui/dialog";
+import DialogCustom from "./DialogCustom";
+import DiscountForm from "./DiscountForm";
+import ImageUploadForm from "./ImageUploadForm";
+import DashboardTextarea from "./DashboardTextarea";
+import DashboardDropdown from "./DashboardDropdown";
+import DashboardOption from "./DashboardOption";
+import DashboardInput from "./DashboardInput";
+import { UpdateProductPayload } from "@/types";
+import { resetImages } from "@/store/slices/imageSlice";
+import { updateProduct as updateProductSlice } from "@/store/slices/productSlice";
+import { store } from "@/store";
+import {
+  deleteProductImages,
+  uploadProductImage,
+} from "@/services/upload.service";
+
+type Status = "active" | "inactive";
+type ProductCategory = "body" | "lens" | "fullset" | "accessories";
+type ProductCondition = "new" | "used";
+type Discount_Type = "fixed" | "percentage" | null;
 
 interface Props {
   id: string;
+  user_id: string;
   name: string;
-  category: "body" | "lens" | "fullset" | "accessories";
-  price: number;
-  stock: number;
+  slug: string;
+  category: ProductCategory;
+  price: number | string;
+  stock: number | string;
   image_urls: string[];
   description: string;
-  status: "active" | "inactive";
-  condition: "new" | "used";
+  status: Status;
+  condition: ProductCondition;
   rating_avg: number;
   rating_count: number;
-  discount_type: "fixed" | "percentage";
-  discount_value: number;
+  discount_type: Discount_Type;
+  discount_value: number | string;
+  discount_active: boolean;
+  final_price: number;
+}
+
+interface ProductForm {
+  id: string;
+  user_id: string;
+  name: string;
+  slug: string;
+  category: ProductCategory;
+  price: string;
+  stock: string;
+  image_urls: string[];
+  description: string;
+  status: Status;
+  condition: ProductCondition;
+  rating_avg: number;
+  rating_count: number;
+  discount_type: Discount_Type;
+  discount_value: string;
   discount_active: boolean;
   final_price: number;
 }
@@ -32,6 +73,7 @@ interface Props {
 export default function DashboardProductCard({
   id,
   name,
+  slug,
   category,
   price,
   stock,
@@ -46,8 +88,34 @@ export default function DashboardProductCard({
   discount_active,
   final_price,
 }: Props) {
+  const profile = useAppSelector((state) => state.user.profile);
+
   const [detail, setDetail] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const [formData, setFormData] = useState<ProductForm>({
+    id,
+    user_id: profile?.id || "",
+    name,
+    slug,
+    category,
+    price: String(price),
+    stock: String(stock),
+    image_urls,
+    description,
+    status,
+    condition,
+    rating_avg,
+    rating_count,
+    discount_type: discount_type || null,
+    discount_value: discount_value ? String(discount_value) : "",
+    discount_active,
+    final_price,
+  });
+
   const handleDetail = () => setDetail(!detail);
+
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
 
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
@@ -65,9 +133,93 @@ export default function DashboardProductCard({
       dispatch(removeProduct(id));
       alert("Produk berhasil dihapus");
     } catch (error) {
+      console.error(error);
       alert("Gagal menghapus produk");
     }
   };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const imagesState = store.getState().image.images;
+
+      // 1. Pisahkan existing & new images
+      const existingUrls = imagesState
+        .filter((img) => img.type === "existing")
+        .map((img) => img.url);
+
+      const deletedUrls = image_urls.filter(
+        (url) => !existingUrls.includes(url)
+      );
+
+      if (deletedUrls.length > 0) {
+        await deleteProductImages(deletedUrls);
+      }
+
+      const newFiles = imagesState
+        .filter((img) => img.type === "new" && img.file)
+        .map((img) => img.file as File);
+
+      // 2. Upload image baru (jika ada)
+      let uploadedUrls: string[] = [];
+
+      if (newFiles.length > 0) {
+        uploadedUrls = await Promise.all(
+          newFiles.map((file) => uploadProductImage(file))
+        );
+      }
+
+      const finalImageUrls = [...existingUrls, ...uploadedUrls];
+
+      // 3. Hitung final price
+      const priceNumber = Number(formData.price);
+      const discountNumber = Number(formData.discount_value || 0);
+
+      let calculatedFinalPrice = priceNumber;
+
+      if (formData.discount_active) {
+        if (formData.discount_type === "percentage") {
+          calculatedFinalPrice =
+            priceNumber - (priceNumber * discountNumber) / 100;
+        } else if (formData.discount_type === "fixed") {
+          calculatedFinalPrice = priceNumber - discountNumber;
+        }
+      }
+
+      // 4. Payload update
+      const { user_id, ...safeFormData } = formData;
+
+      const payload: UpdateProductPayload = {
+        ...safeFormData,
+        price: Number(formData.price),
+        stock: Number(formData.stock),
+        discount_type: formData.discount_active ? formData.discount_type : null,
+        discount_value: Number(formData.discount_value),
+        image_urls: finalImageUrls,
+        final_price: Math.max(calculatedFinalPrice, 0),
+      };
+
+      // 5. Update ke backend
+      const updatedProduct = await updateProduct(payload);
+
+      // 6. Update redux product list
+      dispatch(updateProductSlice(updatedProduct));
+
+      // 7. Cleanup
+      dispatch(resetImages());
+      setOpen(false);
+
+      alert("Produk berhasil diperbarui");
+    } catch (error) {
+      console.error(error);
+      alert("Gagal memperbarui produk");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <tr
@@ -99,7 +251,7 @@ export default function DashboardProductCard({
 
         {/* Stock */}
         <td className="px-6 py-4 font-fira-code text-sm">
-          {stock <= 5 ? (
+          {Number(stock) <= 5 ? (
             <span className="text-rose-400 font-bold">{stock} (Low)</span>
           ) : (
             <span>{stock}</span>
@@ -234,9 +386,161 @@ export default function DashboardProductCard({
                 </div>
               </div>
               <div className="absolute bottom-0 right-0 w-fit flex items-center gap-3 text-base text-zinc-50">
-                <button className="p-2 rounded-full shadow bg-slate-400 dark:bg-slate-600 hover:bg-slate-500 transition-colors duration-200 ease-out">
-                  <FaPenToSquare />
-                </button>
+                <Dialog
+                  open={open}
+                  onOpenChange={(isOpen) => {
+                    setOpen(isOpen);
+
+                    if (!isOpen) {
+                      dispatch(resetImages());
+                    }
+                  }}
+                >
+                  <DialogTrigger asChild>
+                    <button
+                      type="button"
+                      className="p-2 rounded-full shadow bg-slate-400 dark:bg-slate-600 hover:bg-slate-500 transition-colors duration-200 ease-out"
+                    >
+                      <FaPenToSquare />
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="border-none bg-zinc-50 dark:bg-zinc-800 rounded-xl overflow-y-auto hide-scrollbar">
+                    <DialogTitle className="font-extrabold font-fira-code">
+                      Edit Product
+                    </DialogTitle>
+                    <DialogCustom onSubmit={handleSubmit}>
+                      <div className="flex gap-3 items-center">
+                        <div className="w-2/3">
+                          <DashboardInput
+                            title="Name"
+                            name="name"
+                            type="text"
+                            value={formData.name}
+                            onChange={(v) =>
+                              setFormData({ ...formData, name: v })
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="w-1/3">
+                          <DashboardDropdown<ProductCategory>
+                            name="category"
+                            title="Category"
+                            value={formData.category}
+                            onChange={(v) =>
+                              setFormData({ ...formData, category: v })
+                            }
+                            required
+                          >
+                            <DashboardOption value="body" text="Body" />
+                            <DashboardOption value="lens" text="Lens" />
+                            <DashboardOption value="fullset" text="Full Set" />
+                            <DashboardOption
+                              value="accessories"
+                              text="Accessories"
+                            />
+                          </DashboardDropdown>
+                        </div>
+                      </div>
+                      <div className="flex gap-3 items-center">
+                        <div className="w-1/3">
+                          <DashboardInput
+                            title="Price"
+                            name="price"
+                            type="number"
+                            value={formData.price}
+                            onChange={(v) =>
+                              setFormData({ ...formData, price: String(v) })
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="w-1/3">
+                          <DashboardInput
+                            title="Stock"
+                            name="stock"
+                            type="number"
+                            value={formData.stock}
+                            onChange={(v) =>
+                              setFormData({ ...formData, stock: String(v) })
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="w-1/3">
+                          <DashboardDropdown
+                            name="condition"
+                            title="Condition"
+                            value={formData.condition}
+                            onChange={(v) =>
+                              setFormData({ ...formData, condition: v })
+                            }
+                            required
+                          >
+                            <DashboardOption value="new" text="New" />
+                            <DashboardOption value="used" text="Used" />
+                          </DashboardDropdown>
+                        </div>
+                      </div>
+
+                      <DashboardTextarea
+                        name="description"
+                        title="Description"
+                        value={formData.description}
+                        onChange={(v) =>
+                          setFormData({ ...formData, description: v })
+                        }
+                        required
+                      />
+
+                      <ImageUploadForm existingImages={image_urls} />
+
+                      <select
+                        name="status"
+                        defaultValue="active"
+                        className="hidden"
+                      >
+                        <option value="active">Aktif</option>
+                        <option value="inactive">Nonaktif</option>
+                      </select>
+
+                      {/* ==== DISCOUNT ==== */}
+                      <DiscountForm
+                        discountActive={formData.discount_active}
+                        onDiscountActiveChange={(v) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            discount_active: v,
+                            discount_type: v
+                              ? prev.discount_type ?? "percentage"
+                              : null,
+                            discount_value: v ? prev.discount_value : "",
+                          }))
+                        }
+                        discountType={formData.discount_type ?? "percentage"}
+                        discountTypeOnChange={(v) =>
+                          setFormData((prev) => ({ ...prev, discount_type: v }))
+                        }
+                        discountValue={formData.discount_value}
+                        discountValueOnChange={(v) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            discount_value: String(v),
+                          }))
+                        }
+                      />
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className={`px-4 py-2 text-sm font-bold font-fira-code text-zinc-50 bg-teal-400 dark:bg-teal-600 hover:bg-teal-500 rounded ${
+                          loading && "bg-zinc-400 cursor-not-allowed"
+                        }`}
+                      >
+                        {loading ? "Updating..." : "Update Product"}
+                      </button>
+                    </DialogCustom>
+                  </DialogContent>
+                </Dialog>
                 <button
                   onClick={handleDelete}
                   className="p-2 rounded-full shadow bg-rose-400 dark:bg-rose-700 hover:bg-rose-500 transition-colors duration-200 ease-out"

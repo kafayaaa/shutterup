@@ -1,49 +1,63 @@
-import { useState } from "react";
 import DashboardDropdown from "./DashboardDropdown";
 import DashboardInput from "./DashboardInput";
 import DashboardOption from "./DashboardOption";
 
-export default function DiscountForm() {
-  const [isDiscount, setIsDiscount] = useState(false);
+interface Props {
+  discountActive: boolean;
+  onDiscountActiveChange: (value: boolean) => void;
+  discountType: "fixed" | "percentage";
+  discountTypeOnChange: (value: "fixed" | "percentage") => void;
+  discountValue?: number | string;
+  discountValueOnChange: (value: number | string) => void;
+}
 
-  const handleDiscount = () => {
-    setIsDiscount(!isDiscount);
-  };
-
+export default function DiscountForm({
+  discountActive,
+  onDiscountActiveChange,
+  discountType,
+  discountTypeOnChange,
+  discountValue,
+  discountValueOnChange,
+}: Props) {
   return (
     <div className="space-y-2">
       <div className="w-full flex items-center text-sm">
-        <label htmlFor="discount_active">Aktifkan diskon</label>
+        <label htmlFor="discount_active">Activate discount</label>
         <input
-          onChange={handleDiscount}
-          checked={isDiscount}
           type="checkbox"
           name="discount_active"
+          checked={discountActive}
+          onChange={(e) => onDiscountActiveChange(e.target.checked)}
           className="ml-1 size-4 checked:bg-teal-500"
         />
       </div>
-      <div
-        className={`w-full flex items-center gap-3 ${!isDiscount && "hidden"}`}
-      >
-        <div className="w-1/2">
-          <DashboardDropdown
-            name="discount_type"
-            title="Tipe diskon"
-            defaultValue="percentage"
-          >
-            <DashboardOption value="percentage" text="Persentase" />
-            <DashboardOption value="fixed" text="Nominal" />
-          </DashboardDropdown>
+
+      {discountActive && (
+        <div className="w-full flex items-center gap-3">
+          <div className="w-1/2">
+            <DashboardDropdown
+              name="discount_type"
+              title="Discount Type"
+              value={discountType}
+              onChange={discountTypeOnChange}
+            >
+              <DashboardOption value="percentage" text="Percentage" />
+              <DashboardOption value="fixed" text="Nominal" />
+            </DashboardDropdown>
+          </div>
+
+          <div className="w-1/2">
+            <DashboardInput
+              title="Discount Value"
+              name="discount_value"
+              type="number"
+              value={discountValue}
+              onChange={discountValueOnChange}
+              required
+            />
+          </div>
         </div>
-        <div className="w-1/2">
-          <DashboardInput
-            title="Nilai diskon"
-            name="discount_value"
-            type="number"
-            required
-          />
-        </div>
-      </div>
+      )}
     </div>
   );
 }

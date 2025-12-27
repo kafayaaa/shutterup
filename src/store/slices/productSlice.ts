@@ -2,12 +2,12 @@ import { Product } from "@/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface ProductState {
-  products: Product[] | null;
+  products: Product[];
   isLoading: boolean;
 }
 
 const initialState: ProductState = {
-  products: null,
+  products: [],
   isLoading: true,
 };
 
@@ -20,7 +20,7 @@ const productSlice = createSlice({
       state.isLoading = false;
     },
     clearProducts(state) {
-      state.products = null;
+      state.products = [];
       state.isLoading = false;
     },
     addProduct: (state, action: PayloadAction<Product>) => {
@@ -31,9 +31,23 @@ const productSlice = createSlice({
         (product) => product.id !== action.payload
       ) as Product[];
     },
+    updateProduct: (state, action: PayloadAction<Product>) => {
+      const index = state.products.findIndex(
+        (product) => product.id === action.payload.id
+      );
+
+      if (index !== -1) {
+        state.products[index] = action.payload;
+      }
+    },
   },
 });
 
-export const { setProducts, clearProducts, addProduct, removeProduct } =
-  productSlice.actions;
+export const {
+  setProducts,
+  clearProducts,
+  addProduct,
+  removeProduct,
+  updateProduct,
+} = productSlice.actions;
 export default productSlice.reducer;

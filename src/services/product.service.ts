@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import { CreateProductInput } from "@/types/index";
+import { CreateProductInput, UpdateProductPayload } from "@/types/index";
 
 export async function createProduct(data: CreateProductInput) {
   const supabase = await createClient();
@@ -61,4 +61,19 @@ export async function deleteProduct(productId: string, imageUrls: string[]) {
   }
 
   return true;
+}
+
+export async function updateProduct(product: UpdateProductPayload) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("products")
+    .update(product)
+    .eq("id", product.id)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data;
 }

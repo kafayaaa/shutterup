@@ -1,35 +1,55 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+export interface ImageItem {
+  id: string;
+  type: "existing" | "new";
+  url: string;
+  file?: File;
+}
+
 interface ImageState {
-  images: File[] | null;
+  images: ImageItem[];
   isLoading: boolean;
 }
 
 const initialState: ImageState = {
   images: [],
-  isLoading: true,
+  isLoading: false,
 };
 
 const imageSlice = createSlice({
   name: "image",
   initialState,
   reducers: {
+    setExistingImages: (state, action: PayloadAction<string[]>) => {
+      state.images = action.payload.map((url) => ({
+        id: crypto.randomUUID(),
+        type: "existing",
+        url,
+      }));
+    },
+
     addImages: (state, action: PayloadAction<File[]>) => {
-      action.payload.forEach((file) => {
-        state.images?.push(file as File);
-      });
+      const newImages: ImageItem[] = action.payload.map((file) => ({
+        id: crypto.randomUUID(),
+        type: "new",
+        file,
+        url: URL.createObjectURL(file),
+      }));
+
+      state.images.push(...newImages);
     },
-    removeImageByIndex: (state, action: PayloadAction<number>) => {
-      state.images = state.images?.filter(
-        (_, i) => i !== action.payload
-      ) as File[];
+
+    removeImage: (state, action: PayloadAction<string>) => {
+      state.images = state.images.filter(
+        (image) => image.id !== action.payload
+      );
     },
-    resetImages: (state) => {
-      state.images = [];
-    },
+
+    resetImages: () => initialState,
   },
 });
 
-export const { addImages, removeImageByIndex, resetImages } =
+export const { setExistingImages, addImages, removeImage, resetImages } =
   imageSlice.actions;
 export default imageSlice.reducer;

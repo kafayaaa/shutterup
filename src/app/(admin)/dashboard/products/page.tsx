@@ -5,16 +5,21 @@ import DashboardInput from "@/components/DashboardInput";
 import DashboardOption from "@/components/DashboardOption";
 import DashboardProductCard from "@/components/DashboardProductCard";
 import DashboardTextarea from "@/components/DashboardTextarea";
-import DialogForm from "@/components/DialogForm";
+import DialogCustom from "@/components/DialogCustom";
 import DiscountForm from "@/components/DiscountForm";
 import ImageUploadForm from "@/components/ImageUploadForm";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { createProduct } from "@/services/product.service";
 import { uploadProductImage } from "@/services/upload.service";
-import { RootState } from "@/store";
+import { RootState, store } from "@/store";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { resetImages } from "@/store/slices/imageSlice";
 import { addProduct } from "@/store/slices/productSlice";
-import { toggleModal } from "@/store/slices/uiSlice";
 import slugify from "@/utils/slugify";
 import { useState } from "react";
 import { FaPlus } from "react-icons/fa6";
@@ -23,11 +28,18 @@ import { useSelector } from "react-redux";
 
 export default function ProductPage() {
   const images = useSelector((state: RootState) => state.image.images);
-  const isOpen = useSelector((state: RootState) => state.ui.isModalOpen);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [discountActive, setDiscountActive] = useState(false);
+  const [discountType, setDiscountType] = useState<"fixed" | "percentage">(
+    "percentage"
+  );
+  const [discountValue, setDiscountValue] = useState<number | string>(0);
+
   const { products, isLoading } = useAppSelector((state) => state.product);
 
   const dispatch = useAppDispatch();
+
   if (!images) return [];
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -73,13 +85,27 @@ export default function ProductPage() {
       }
 
       // ==== VALIDASI FILE ====
-      let imageUrls: string[] = [];
+      const images = store.getState().image.images;
 
-      if (images.length > 0) {
-        imageUrls = await Promise.all(
-          images.map((file) => uploadProductImage(file))
+      const existingUrls = images
+        .filter((img) => img.type === "existing")
+        .map((img) => img.url);
+
+      const newImages = images.filter(
+        (img): img is typeof img & { file: File } =>
+          img.type === "new" && img.file instanceof File
+      );
+
+      let uploadedUrls: string[] = [];
+
+      if (newImages.length > 0) {
+        uploadedUrls = await Promise.all(
+          newImages.map((img) => uploadProductImage(img.file))
         );
       }
+
+      const imageUrls = [...existingUrls, ...uploadedUrls];
+
       // ==== INSERT PRODUCT ====
       const newProduct = await createProduct({
         name,
@@ -110,7 +136,7 @@ export default function ProductPage() {
       }
     } finally {
       setLoading(false);
-      dispatch(toggleModal());
+      setOpen(false);
     }
   };
 
@@ -123,79 +149,106 @@ export default function ProductPage() {
           </h1>
           <p className="text-zinc-400 text-sm">Manage catalog assets.</p>
         </div>
-        <DialogForm
-          trigger={
-            <div className="px-4 py-2 flex items-center gap-2 text-sm text-zinc-50 font-bold bg-teal-400 dark:bg-teal-600 hover:bg-teal-500 rounded">
-              <FaPlus className="text-base" /> Product
-            </div>
-          }
-          onSubmit={handleSubmit}
+        <Dialog
+          open={open}
+          onOpenChange={(isOpen) => {
+            setOpen(isOpen);
+
+            if (!isOpen) {
+              dispatch(resetImages());
+            }
+          }}
         >
-          <div className="flex gap-3 items-center">
-            <div className="w-2/3">
-              <DashboardInput title="Nama" name="name" type="text" required />
-            </div>
-            <div className="w-1/3">
-              <DashboardDropdown
-                name="category"
-                title="Kategori"
-                defaultValue="body"
-              >
-                <DashboardOption value="body" text="Body" />
-                <DashboardOption value="lens" text="Lens" />
-                <DashboardOption value="fullset" text="Full Set" />
-                <DashboardOption value="accessories" text="Aksesoris" />
-              </DashboardDropdown>
-            </div>
-          </div>
-          <div className="flex gap-3 items-center">
-            <div className="w-1/3">
-              <DashboardInput
-                title="Harga"
-                name="price"
-                type="number"
+          <DialogTrigger asChild>
+            <button
+              type="button"
+              className="px-4 py-2 flex items-center gap-2 text-sm text-zinc-50 font-bold bg-teal-400 dark:bg-teal-600 hover:bg-teal-500 rounded"
+            >
+              <FaPlus className="text-base" /> Product
+            </button>
+          </DialogTrigger>
+          <DialogContent className="border-none bg-zinc-50 dark:bg-zinc-800 rounded-xl overflow-y-auto hide-scrollbar">
+            <DialogTitle className="font-extrabold font-fira-code">
+              Add Product
+            </DialogTitle>
+            <DialogCustom onSubmit={handleSubmit}>
+              <div className="flex gap-3 items-center">
+                <div className="w-2/3">
+                  <DashboardInput
+                    title="Name"
+                    name="name"
+                    type="text"
+                    required
+                  />
+                </div>
+                <div className="w-1/3">
+                  <DashboardDropdown name="category" title="Category" required>
+                    <DashboardOption value="body" text="Body" />
+                    <DashboardOption value="lens" text="Lens" />
+                    <DashboardOption value="fullset" text="Full Set" />
+                    <DashboardOption value="accessories" text="Accessories" />
+                  </DashboardDropdown>
+                </div>
+              </div>
+              <div className="flex gap-3 items-center">
+                <div className="w-1/3">
+                  <DashboardInput
+                    title="Price"
+                    name="price"
+                    type="number"
+                    required
+                  />
+                </div>
+                <div className="w-1/3">
+                  <DashboardInput
+                    title="Stock"
+                    name="stock"
+                    type="number"
+                    required
+                  />
+                </div>
+                <div className="w-1/3">
+                  <DashboardDropdown name="condition" title="Condition">
+                    <DashboardOption value="new" text="New" />
+                    <DashboardOption value="used" text="Used" />
+                  </DashboardDropdown>
+                </div>
+              </div>
+
+              <DashboardTextarea
+                name="description"
+                title="Description"
                 required
               />
-            </div>
-            <div className="w-1/3">
-              <DashboardInput
-                title="Stok"
-                name="stock"
-                type="number"
-                required
+
+              <ImageUploadForm />
+
+              <select name="status" defaultValue="active" className="hidden">
+                <option value="active">Aktif</option>
+                <option value="inactive">Nonaktif</option>
+              </select>
+
+              {/* ==== DISCOUNT ==== */}
+              <DiscountForm
+                discountActive={discountActive}
+                onDiscountActiveChange={setDiscountActive}
+                discountType={discountType}
+                discountTypeOnChange={setDiscountType}
+                discountValue={discountValue}
+                discountValueOnChange={setDiscountValue}
               />
-            </div>
-            <div className="w-1/3">
-              <DashboardDropdown
-                name="condition"
-                title="Kondisi"
-                defaultValue="new"
+              <button
+                type="submit"
+                disabled={loading}
+                className={`px-4 py-2 text-sm font-bold font-fira-code text-zinc-50 bg-teal-400 dark:bg-teal-600 hover:bg-teal-500 rounded ${
+                  loading && "bg-zinc-400 cursor-not-allowed"
+                }`}
               >
-                <DashboardOption value="new" text="Baru" />
-                <DashboardOption value="used" text="Bekas" />
-              </DashboardDropdown>
-            </div>
-          </div>
-
-          <DashboardTextarea name="description" title="Deskripsi" required />
-
-          <ImageUploadForm />
-
-          <select name="status" defaultValue="active" className="hidden">
-            <option value="active">Aktif</option>
-            <option value="inactive">Nonaktif</option>
-          </select>
-
-          {/* ==== DISCOUNT ==== */}
-          <DiscountForm />
-          <button
-            type="submit"
-            disabled={loading}
-            className={`px-4 py-2 text-sm font-bold font-fira-code text-zinc-50 bg-teal-400 dark:bg-teal-600 hover:bg-teal-500 rounded`}
-          >
-            {loading ? "Menyimpan..." : "Simpan Produk"}
-          </button>
-        </DialogForm>
+                {loading ? "Adding..." : "Add Product"}
+              </button>
+            </DialogCustom>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Table */}
