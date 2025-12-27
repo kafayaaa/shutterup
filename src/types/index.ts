@@ -42,3 +42,18 @@ export interface CreateProductInput {
 }
 
 export type UpdateProductPayload = Omit<Product, "user_id">;
+
+export interface CartItem {
+  id: string;
+  product_id: string;
+  name: string;
+  image: string[];
+  price: number;
+  quantity: number;
+}
+
+export interface Cart {
+  id: string;
+  user_id: string;
+  items: CartItem[];
+}

@@ -1,6 +1,27 @@
 import { createClient } from "@/lib/supabase/client";
 import { CreateProductInput, UpdateProductPayload } from "@/types/index";
 
+export async function getProductBySlug(slug: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") return null; // not found
+    if (error) {
+      console.error("Supabase error:", error);
+      throw new Error("Failed to fetch product" + error.message);
+    }
+  }
+  console.log({ data, error });
+
+  return data;
+}
+
 export async function createProduct(data: CreateProductInput) {
   const supabase = await createClient();
   const {
@@ -57,7 +78,10 @@ export async function deleteProduct(productId: string, imageUrls: string[]) {
 
   if (error) {
     console.error("Delete product error:", error);
-    throw error;
+    if (error) {
+      console.error("Supabase error:", error);
+      throw new Error("Failed to delete product" + error.message);
+    }
   }
 
   return true;
@@ -73,7 +97,10 @@ export async function updateProduct(product: UpdateProductPayload) {
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error("Supabase error:", error);
+    throw new Error("Failed to update product" + error.message);
+  }
 
   return data;
 }

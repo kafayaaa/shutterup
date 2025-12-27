@@ -18,7 +18,10 @@ export async function uploadProductImage(file: File) {
 
   if (error) {
     console.error("Upload error:", error);
-    throw error;
+    if (error) {
+      console.error("Supabase error:", error);
+      throw new Error("Failed to upload image" + error.message);
+    }
   }
 
   const { data: publicUrl } = supabase.storage
@@ -56,7 +59,10 @@ export async function deleteProductImages(urls: string[]) {
 
   if (error) {
     console.error("Failed to delete images:", error);
-    throw error;
+    if (error) {
+      console.error("Supabase error:", error);
+      throw new Error("Failed to delete images" + error.message);
+    }
   }
 
   console.log("Deleted URLs:", urls);

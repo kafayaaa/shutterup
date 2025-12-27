@@ -107,7 +107,7 @@ export default function ImageUploadForm({ existingImages }: Props) {
 
       {/* ==== PREVIEW ==== */}
       {images.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 mt-3 border rounded p-3">
+        <div className="grid grid-cols-3 gap-3 mt-3 border border-zinc-300 dark:border-zinc-700 rounded p-3">
           {images.map((image) => (
             <div key={image.id} className="relative">
               <Image

@@ -8,6 +8,7 @@ import DashboardTextarea from "@/components/DashboardTextarea";
 import DialogCustom from "@/components/DialogCustom";
 import DiscountForm from "@/components/DiscountForm";
 import ImageUploadForm from "@/components/ImageUploadForm";
+import Loading from "@/components/Loading";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +24,6 @@ import { addProduct } from "@/store/slices/productSlice";
 import slugify from "@/utils/slugify";
 import { useState } from "react";
 import { FaPlus } from "react-icons/fa6";
-import { RiCircleLine, RiLoader5Line } from "react-icons/ri";
 import { useSelector } from "react-redux";
 
 export default function ProductPage() {
@@ -267,15 +267,7 @@ export default function ProductPage() {
             {isLoading ? (
               <tr>
                 <td colSpan={5}>
-                  <div className="w-full py-5 flex items-center justify-center font-extrabold font-fira-code">
-                    <div className="flex items-center gap-2">
-                      <div className="relative h-8 w-8 text-3xl">
-                        <RiCircleLine className="absolute top-0 left-0 text-zinc-200 dark:text-zinc-700" />
-                        <RiLoader5Line className="absolute top-0 left-0 z-10 animate-spin text-teal-500" />
-                      </div>
-                      <p>Loading...</p>
-                    </div>
-                  </div>
+                  <Loading />
                 </td>
               </tr>
             ) : (
