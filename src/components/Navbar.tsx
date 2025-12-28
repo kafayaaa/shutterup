@@ -16,12 +16,14 @@ export default function Navbar() {
   return (
     <div className="fixed top-0 left-0 right-0 z-10 w-full py-5 shadow backdrop-blur-lg">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <h1 className="text-2xl font-bold font-fira-code">ShutterUp</h1>
+        <Link href="/" className="text-2xl font-bold font-fira-code">
+          ShutterUp
+        </Link>
         <nav className="flex items-center gap-5">
           <ToggleTheme />
           <ul className="flex items-center gap-5">
             <li>
-              <Link href="/cart" className="relative">
+              <Link href="/carts" className="relative">
                 <MdOutlineShoppingCart className="text-2xl hover:text-teal-500 transition-colors duration-200 ease-out" />
                 {cartCount > 0 && (
                   <span className="absolute -top-2 -right-2 min-w-4.5 h-4.5 px-0.5 flex items-center justify-center rounded-full bg-red-500 text-white text-[0.6rem] font-semibold">

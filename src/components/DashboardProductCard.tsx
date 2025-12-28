@@ -24,6 +24,7 @@ import {
   deleteProductImages,
   uploadProductImage,
 } from "@/services/upload.service";
+import Alert from "./Alert";
 
 type Status = "active" | "inactive";
 type ProductCategory = "body" | "lens" | "fullset" | "accessories";
@@ -90,6 +91,12 @@ export default function DashboardProductCard({
 }: Props) {
   const profile = useAppSelector((state) => state.user.profile);
 
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState<"success" | "error" | "info">(
+    "info"
+  );
+
   const [detail, setDetail] = useState(false);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -131,10 +138,14 @@ export default function DashboardProductCard({
     try {
       await deleteProduct(id, image_urls);
       dispatch(removeProduct(id));
-      alert("Produk berhasil dihapus");
+      setAlertMessage(`Successfully deleted product "${name}"`);
+      setAlertType("info");
+      setShowAlert(true);
     } catch (error) {
       console.error(error);
-      alert("Gagal menghapus produk");
+      setAlertMessage(`Failed to delete product "${name}"`);
+      setAlertType("error");
+      setShowAlert(true);
     }
   };
 
@@ -211,13 +222,22 @@ export default function DashboardProductCard({
       dispatch(resetImages());
       setOpen(false);
 
-      alert("Produk berhasil diperbarui");
+      setAlertMessage(`Successfully updated product "${name}"`);
+      setAlertType("success");
+      setShowAlert(true);
     } catch (error) {
       console.error(error);
-      alert("Gagal memperbarui produk");
+      setAlertMessage(`Failed to update product "${name}"`);
+      setAlertType("error");
+      setShowAlert(true);
     } finally {
       setLoading(false);
     }
+  };
+
+  const dismissAlert = () => {
+    setShowAlert(false);
+    setAlertMessage("");
   };
 
   return (
@@ -226,6 +246,15 @@ export default function DashboardProductCard({
         onClick={handleDetail}
         className="hover:bg-zinc-300/20 dark:hover:bg-zinc-700/20 transition-colors group cursor-pointer"
       >
+        {/* ===== ALERT ===== */}
+        {showAlert && (
+          <Alert
+            message={alertMessage}
+            type={alertType}
+            onDismiss={dismissAlert}
+            duration={4000}
+          />
+        )}
         {/* Name & Image */}
         <td className="px-6 py-4">
           <div className="flex items-center gap-4">

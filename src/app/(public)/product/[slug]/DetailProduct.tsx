@@ -1,15 +1,23 @@
 "use client";
 
 import { addToCart, getCart } from "@/services/cart.service";
-import { useAppDispatch } from "@/store/hooks";
-import { addCartItem, setCartItems } from "@/store/slices/cartSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setCartItems } from "@/store/slices/cartSlice";
 import { Product } from "@/types";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import { FaStar, FaTag } from "react-icons/fa6";
+import Alert from "@/components/Alert";
 
 export default function DetailProduct({ product }: { product: Product }) {
+  const { profile } = useAppSelector((state) => state.user);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState<"success" | "error" | "info">(
+    "info"
+  );
+
   const dispatch = useAppDispatch();
   useEffect(() => {
     getCart().then((items) => {
@@ -18,20 +26,46 @@ export default function DetailProduct({ product }: { product: Product }) {
   }, []);
 
   const handleAddToCart = async () => {
+    if (!profile) {
+      setAlertMessage(`Please sign in first to add products to your cart`);
+      setAlertType("error");
+      setShowAlert(true);
+      return;
+    }
     try {
       await addToCart(product.id, product.price);
 
       const items = await getCart();
       dispatch(setCartItems(items));
+      setAlertMessage(`Successfully added ${product.name} to your cart!`);
+      setAlertType("success");
+      setShowAlert(true);
     } catch (error) {
       console.error("Add to cart failed:", error);
+      setAlertMessage(`Failed to add ${product.name} to your cart!`);
+      setAlertType("error");
+      setShowAlert(true);
     }
+  };
+
+  const dismissAlert = () => {
+    setShowAlert(false);
+    setAlertMessage("");
   };
 
   return (
     <div className="w-full">
       <Navbar />
-      <div className="w-full max-w-7xl mx-auto pt-30 grid grid-cols-2 gap-5">
+      <div className="w-full max-w-7xl mx-auto pt-30 pb-10 grid grid-cols-2 gap-5">
+        {/* ===== ALERT ===== */}
+        {showAlert && (
+          <Alert
+            message={alertMessage}
+            type={alertType}
+            onDismiss={dismissAlert}
+            duration={4000}
+          />
+        )}
         {/* ===== IMAGES SECTION ===== */}
         <div className="col-span-1 w-full grid grid-cols-2 gap-3">
           {product.image_urls.map((url, index) => (
