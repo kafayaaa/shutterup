@@ -55,7 +55,10 @@ export default function Navbar() {
               </li>
             ) : profile ? (
               <li className="flex items-center gap-2">
-                <div className="h-7 w-auto aspect-square rounded-full outline-0 outline-offset-1 hover:outline-2 hover:outline-teal-500 transition-colors duration-200 ease-out">
+                <Link
+                  href="/profile"
+                  className="h-7 w-auto aspect-square rounded-full outline-0 outline-offset-1 hover:outline-2 hover:outline-teal-500 transition-colors duration-200 ease-out"
+                >
                   <Image
                     src={profile.avatar_url}
                     width={10}
@@ -63,7 +66,7 @@ export default function Navbar() {
                     alt="Avatar"
                     className="w-full h-full object-cover rounded-full"
                   />
-                </div>
+                </Link>
                 <div className="text-sm">{profile.full_name}</div>
               </li>
             ) : (

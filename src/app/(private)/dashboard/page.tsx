@@ -1,11 +1,12 @@
 "use client";
+import LoadingScreen from "@/components/LoadingScreen";
 import { useAppSelector } from "@/store/hooks";
 import { redirect } from "next/navigation";
 
 export default function DashboardPage() {
   const { profile, isLoading } = useAppSelector((state) => state.user);
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) return <LoadingScreen />;
 
   if (!profile) {
     redirect("/");
