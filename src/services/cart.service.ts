@@ -22,6 +22,7 @@ export async function getCart(): Promise<CartItem[]> {
         price,
         product:products!inner (
           name,
+          slug,
           image_urls
         )
       )
@@ -45,6 +46,7 @@ export async function getCart(): Promise<CartItem[]> {
       id: item.id,
       product_id: item.product_id,
       name: product?.name ?? "",
+      slug: product?.slug ?? "",
       image: product?.image_urls ?? [],
       price: item.price,
       quantity: item.quantity,
@@ -124,7 +126,7 @@ export async function addToCart(
   // ambil nama & image product
   const { data: product, error: productError } = await supabase
     .from("products")
-    .select("name, image_urls")
+    .select("name, slug, image_urls")
     .eq("id", productId)
     .single();
   if (productError || !product) throw new Error("Failed to fetch product");
@@ -133,6 +135,7 @@ export async function addToCart(
     id: cartItem.id,
     product_id: productId,
     name: product.name,
+    slug: product.slug,
     image: product.image_urls ?? [],
     price: cartItem.price,
     quantity: cartItem.quantity,
@@ -157,13 +160,10 @@ export async function updateCartQuantity(cartItemId: string, quantity: number) {
   return data;
 }
 
-export async function removeCartItem(cartItemId: string) {
+export async function removeCart(userId: string) {
   const supabase = await createClient();
 
-  const { error } = await supabase
-    .from("cart_items")
-    .delete()
-    .eq("id", cartItemId);
+  const { error } = await supabase.from("carts").delete().eq("user_id", userId);
 
   if (error) {
     console.error("Supabase error:", error);

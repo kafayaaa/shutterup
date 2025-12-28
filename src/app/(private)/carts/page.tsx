@@ -2,6 +2,7 @@
 
 import Alert from "@/components/Alert";
 import Loading from "@/components/Loading";
+import LoadingScreen from "@/components/LoadingScreen";
 import Navbar from "@/components/Navbar";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
@@ -19,7 +20,9 @@ import { FaTrash } from "react-icons/fa6";
 import { PiWarningCircle } from "react-icons/pi";
 
 export default function CartsPage() {
-  const { profile } = useAppSelector((state) => state.user);
+  const { profile, isLoading: profileLoading } = useAppSelector(
+    (state) => state.user
+  );
   const { items, isLoading } = useAppSelector((state) => state.cart);
 
   const [selectedItem, setSelectedItem] = useState<CartItem | null>(null);
@@ -59,6 +62,8 @@ export default function CartsPage() {
     const { error } = await supabase.from("cart_items").delete().eq("id", id);
     if (error) console.error("Gagal delete item:", error.message);
   };
+
+  if (profileLoading) return <LoadingScreen />;
 
   return (
     <div className="w-full">

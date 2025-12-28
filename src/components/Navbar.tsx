@@ -33,7 +33,7 @@ export default function Navbar() {
               </Link>
             </li>
             <li>
-              <Link href="#">
+              <Link href="/orders">
                 <BiReceipt className="text-2xl hover:text-teal-500 transition-colors duration-200 ease-out" />
               </Link>
             </li>
