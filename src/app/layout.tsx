@@ -6,6 +6,7 @@ import ReduxProvider from "@/providers/ReduxProvider";
 import UserListener from "@/components/UserListener";
 import ProductListener from "@/components/ProductListener";
 import CartListener from "@/components/CartListener";
+import AddressListener from "@/components/AddressListener";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
@@ -37,6 +38,7 @@ export default function RootLayout({
             <UserListener />
             <ProductListener />
             <CartListener />
+            <AddressListener />
             {children}
           </ReduxProvider>
         </ThemeProvider>

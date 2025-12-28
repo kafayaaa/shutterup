@@ -58,3 +58,23 @@ export interface Cart {
   user_id: string;
   items: CartItem[];
 }
+
+export interface ShippingAddress {
+  id: string;
+  user_id: string;
+  recipient_name: string;
+  phone_number: string;
+  address_line: string;
+  city: string;
+  province: string;
+  postal_code: string;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Type untuk membuat alamat baru (tanpa id dan timestamp)
+export type CreateAddressInput = Omit<
+  ShippingAddress,
+  "id" | "user_id" | "created_at" | "updated_at"
+>;

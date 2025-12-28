@@ -86,6 +86,9 @@ export default function CartsPage() {
           </div>
         ) : (
           <>
+            <div className="col-span-12 font-extrabold font-fira-code text-2xl">
+              Your Cart
+            </div>
             <div className="col-span-8 flex flex-col gap-5">
               {items.map((item) => (
                 <div
@@ -202,10 +205,10 @@ export default function CartsPage() {
                       .toLocaleString("id")}
                   </span>
                 </div>
-                <div className="mt-3">
-                  <button className="w-full py-2 rounded-md bg-teal-500 hover:bg-teal-500/80 text-zinc-50 font-extrabold cursor-pointer">
+                <div className="mt-3 w-full py-2 flex items-center justify-center rounded-md bg-teal-500 hover:bg-teal-500/80 text-zinc-50 font-extrabold cursor-pointer">
+                  <Link href="/checkout" className="">
                     Checkout Now
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
