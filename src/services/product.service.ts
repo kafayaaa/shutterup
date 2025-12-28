@@ -17,7 +17,6 @@ export async function getProductBySlug(slug: string) {
       throw new Error("Failed to fetch product" + error.message);
     }
   }
-  console.log({ data, error });
 
   return data;
 }
