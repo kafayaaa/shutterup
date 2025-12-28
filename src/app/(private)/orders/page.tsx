@@ -1,3 +1,5 @@
+"use client";
+
 import LoadingScreen from "@/components/LoadingScreen";
 import Navbar from "@/components/Navbar";
 import { useAppSelector } from "@/store/hooks";

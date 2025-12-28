@@ -12,6 +12,9 @@ import { FaLocationDot, FaPhone } from "react-icons/fa6";
 import { useState } from "react";
 import Alert from "@/components/Alert";
 import { clearCart } from "@/store/slices/cartSlice";
+import { removeCart } from "@/services/cart.service";
+import { createClient } from "@/lib/supabase/client";
+import { BiCircle, BiLoaderAlt } from "react-icons/bi";
 
 export default function CheckoutPage() {
   const { profile, isLoading: profielLoading } = useAppSelector(
@@ -32,6 +35,7 @@ export default function CheckoutPage() {
 
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const supabase = createClient();
 
   if (profielLoading) {
     return <LoadingScreen />;
@@ -99,13 +103,46 @@ export default function CheckoutPage() {
         // @ts-expect-error (Mengabaikan error TS karena snap dipanggil dari script eksternal)
         window.snap.pay(data.token, {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onSuccess: function (result: any) {
-            setAlert({ message: "Payment Successful!", type: "success" });
-            // Di sini Anda bisa arahkan user ke halaman sukses atau kosongkan cart
-            // 1. Kosongkan Keranjang (Cart) di Redux
-            dispatch(clearCart());
-            // 2. Arahkan ke halaman "Thank You" atau "Orders"
-            router.push("/orders");
+          onSuccess: async function (result: any) {
+            setLoading(true);
+            try {
+              // Siapkan data items sesuai format yang dibutuhkan SQL (p_items)
+              const orderItems = items.map((item) => ({
+                product_id: item.product_id, // Pastikan ini UUID product
+                quantity: item.quantity,
+                price: item.price,
+              }));
+
+              // Panggil fungsi RPC di Supabase
+              const { data: orderId, error } = await supabase.rpc(
+                "create_order_and_clear_cart",
+                {
+                  p_user_id: profile.id,
+                  p_total_price: total,
+                  p_items: orderItems,
+                }
+              );
+
+              if (error) throw error;
+
+              // Jika berhasil di database, baru update UI
+              dispatch(clearCart());
+              setAlert({
+                message: "Payment Successful! Order has been placed.",
+                type: "success",
+              });
+
+              // Redirect ke halaman detail pesanan
+              router.push(`/orders`);
+            } catch (err) {
+              console.error("Database Error:", err);
+              setAlert({
+                message: "Failed to save order to database",
+                type: "error",
+              });
+            } finally {
+              setLoading(false);
+            }
           },
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onPending: function (result: any) {
@@ -240,10 +277,20 @@ export default function CheckoutPage() {
 
                 <button
                   onClick={handlePayment}
-                  disabled={!defaultAddress || items.length === 0}
+                  disabled={!defaultAddress || items.length === 0 || loading}
                   className="w-full py-3 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-md transition-colors disabled:bg-zinc-600 disabled:cursor-not-allowed"
                 >
-                  Proceed to Payment
+                  {loading ? (
+                    <div className="w-full flex justify-center items-center gap-2">
+                      <div className="relative h-8 w-8 text-3xl">
+                        <BiCircle className="absolute top-0 left-0 text-white" />
+                        <BiLoaderAlt className="absolute top-0 left-0 z-10 animate-spin text-teal-500/60" />
+                      </div>
+                      <p>Processing...</p>
+                    </div>
+                  ) : (
+                    "Proceed to Payment"
+                  )}
                 </button>
 
                 {!defaultAddress && (
