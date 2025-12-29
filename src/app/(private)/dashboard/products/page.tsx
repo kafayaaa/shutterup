@@ -1,5 +1,6 @@
 "use client";
 
+import Alert from "@/components/Alert";
 import DashboardDropdown from "@/components/DashboardDropdown";
 import DashboardInput from "@/components/DashboardInput";
 import DashboardOption from "@/components/DashboardOption";
@@ -30,6 +31,10 @@ export default function ProductPage() {
   const images = useSelector((state: RootState) => state.image.images);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [alert, setAlert] = useState<{
+    message: string;
+    type: "success" | "error" | "info";
+  } | null>(null);
   const [discountActive, setDiscountActive] = useState(false);
   const [discountType, setDiscountType] = useState<"fixed" | "percentage">(
     "percentage"
@@ -126,13 +131,14 @@ export default function ProductPage() {
         discount_active: discountActive,
       });
 
-      alert("Produk berhasil ditambahkan");
+      setAlert({ message: "Product created!", type: "success" });
       form.reset();
       dispatch(resetImages());
       dispatch(addProduct(newProduct));
     } catch (error: unknown) {
       if (error instanceof Error) {
-        alert(error.message);
+        setAlert({ message: error.message, type: "error" });
+        console.error(error.message);
       }
     } finally {
       setLoading(false);
@@ -141,145 +147,160 @@ export default function ProductPage() {
   };
 
   return (
-    <div className="w-full min-h-screen p-5 flex flex-col gap-5">
-      <div className="w-full flex justify-between items-center gap-5">
-        <div>
-          <h1 className="text-2xl font-bold font-heading font-fira-code">
-            Product Inventory
-          </h1>
-          <p className="text-zinc-400 text-sm">Manage catalog assets.</p>
-        </div>
-        <Dialog
-          open={open}
-          onOpenChange={(isOpen) => {
-            setOpen(isOpen);
+    <>
+      {/* ===== ALERT ===== */}
+      {alert && (
+        <Alert
+          message={alert.message}
+          type={alert.type}
+          duration={4000}
+          onDismiss={() => setAlert(null)}
+        />
+      )}
+      <div className="w-full min-h-screen p-5 flex flex-col gap-5">
+        <div className="w-full flex justify-between items-center gap-5">
+          <div>
+            <h1 className="text-2xl font-bold font-heading font-fira-code">
+              Product Inventory
+            </h1>
+            <p className="text-zinc-400 text-sm">Manage catalog assets.</p>
+          </div>
+          <Dialog
+            open={open}
+            onOpenChange={(isOpen) => {
+              setOpen(isOpen);
 
-            if (!isOpen) {
-              dispatch(resetImages());
-            }
-          }}
-        >
-          <DialogTrigger asChild>
-            <button
-              type="button"
-              className="px-4 py-2 flex items-center gap-2 text-sm text-zinc-50 font-bold bg-teal-400 dark:bg-teal-600 hover:bg-teal-500 rounded"
-            >
-              <FaPlus className="text-base" /> Product
-            </button>
-          </DialogTrigger>
-          <DialogContent className="border-none bg-zinc-50 dark:bg-zinc-800 rounded-xl overflow-y-auto hide-scrollbar">
-            <DialogTitle className="font-extrabold font-fira-code">
-              Add Product
-            </DialogTitle>
-            <DialogCustom onSubmit={handleSubmit}>
-              <div className="flex gap-3 items-center">
-                <div className="w-2/3">
-                  <DashboardInput
-                    title="Name"
-                    name="name"
-                    type="text"
-                    required
-                  />
-                </div>
-                <div className="w-1/3">
-                  <DashboardDropdown name="category" title="Category" required>
-                    <DashboardOption value="body" text="Body" />
-                    <DashboardOption value="lens" text="Lens" />
-                    <DashboardOption value="fullset" text="Full Set" />
-                    <DashboardOption value="accessories" text="Accessories" />
-                  </DashboardDropdown>
-                </div>
-              </div>
-              <div className="flex gap-3 items-center">
-                <div className="w-1/3">
-                  <DashboardInput
-                    title="Price"
-                    name="price"
-                    type="number"
-                    required
-                  />
-                </div>
-                <div className="w-1/3">
-                  <DashboardInput
-                    title="Stock"
-                    name="stock"
-                    type="number"
-                    required
-                  />
-                </div>
-                <div className="w-1/3">
-                  <DashboardDropdown name="condition" title="Condition">
-                    <DashboardOption value="new" text="New" />
-                    <DashboardOption value="used" text="Used" />
-                  </DashboardDropdown>
-                </div>
-              </div>
-
-              <DashboardTextarea
-                name="description"
-                title="Description"
-                required
-              />
-
-              <ImageUploadForm />
-
-              <select name="status" defaultValue="active" className="hidden">
-                <option value="active">Aktif</option>
-                <option value="inactive">Nonaktif</option>
-              </select>
-
-              {/* ==== DISCOUNT ==== */}
-              <DiscountForm
-                discountActive={discountActive}
-                onDiscountActiveChange={setDiscountActive}
-                discountType={discountType}
-                discountTypeOnChange={setDiscountType}
-                discountValue={discountValue}
-                discountValueOnChange={setDiscountValue}
-              />
+              if (!isOpen) {
+                dispatch(resetImages());
+              }
+            }}
+          >
+            <DialogTrigger asChild>
               <button
-                type="submit"
-                disabled={loading}
-                className={`px-4 py-2 text-sm font-bold font-fira-code text-zinc-50 bg-teal-400 dark:bg-teal-600 hover:bg-teal-500 rounded ${
-                  loading && "bg-zinc-400 cursor-not-allowed"
-                }`}
+                type="button"
+                className="px-4 py-2 flex items-center gap-2 text-sm text-zinc-50 font-bold bg-teal-400 dark:bg-teal-600 hover:bg-teal-500 rounded"
               >
-                {loading ? "Adding..." : "Add Product"}
+                <FaPlus className="text-base" /> Product
               </button>
-            </DialogCustom>
-          </DialogContent>
-        </Dialog>
-      </div>
+            </DialogTrigger>
+            <DialogContent className="border-none bg-zinc-50 dark:bg-zinc-800 rounded-xl overflow-y-auto hide-scrollbar">
+              <DialogTitle className="font-extrabold font-fira-code">
+                Add Product
+              </DialogTitle>
+              <DialogCustom onSubmit={handleSubmit}>
+                <div className="flex gap-3 items-center">
+                  <div className="w-2/3">
+                    <DashboardInput
+                      title="Name"
+                      name="name"
+                      type="text"
+                      required
+                    />
+                  </div>
+                  <div className="w-1/3">
+                    <DashboardDropdown
+                      name="category"
+                      title="Category"
+                      required
+                    >
+                      <DashboardOption value="body" text="Body" />
+                      <DashboardOption value="lens" text="Lens" />
+                      <DashboardOption value="fullset" text="Full Set" />
+                      <DashboardOption value="accessories" text="Accessories" />
+                    </DashboardDropdown>
+                  </div>
+                </div>
+                <div className="flex gap-3 items-center">
+                  <div className="w-1/3">
+                    <DashboardInput
+                      title="Price"
+                      name="price"
+                      type="number"
+                      required
+                    />
+                  </div>
+                  <div className="w-1/3">
+                    <DashboardInput
+                      title="Stock"
+                      name="stock"
+                      type="number"
+                      required
+                    />
+                  </div>
+                  <div className="w-1/3">
+                    <DashboardDropdown name="condition" title="Condition">
+                      <DashboardOption value="new" text="New" />
+                      <DashboardOption value="used" text="Used" />
+                    </DashboardDropdown>
+                  </div>
+                </div>
 
-      {/* Table */}
-      <div className="rounded-xl border border-white dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800/40 backdrop-blur-md">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-white dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 uppercase text-xs tracking-widest font-fira-code">
-              <th className="px-6 py-4">Product</th>
-              <th className="px-6 py-4">Category</th>
-              <th className="px-6 py-4">Stock</th>
-              <th className="px-6 py-4">Price</th>
-              <th className="px-6 py-4">Rating</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {isLoading ? (
-              <tr>
-                <td colSpan={5}>
-                  <Loading />
-                </td>
+                <DashboardTextarea
+                  name="description"
+                  title="Description"
+                  required
+                />
+
+                <ImageUploadForm />
+
+                <select name="status" defaultValue="active" className="hidden">
+                  <option value="active">Aktif</option>
+                  <option value="inactive">Nonaktif</option>
+                </select>
+
+                {/* ==== DISCOUNT ==== */}
+                <DiscountForm
+                  discountActive={discountActive}
+                  onDiscountActiveChange={setDiscountActive}
+                  discountType={discountType}
+                  discountTypeOnChange={setDiscountType}
+                  discountValue={discountValue}
+                  discountValueOnChange={setDiscountValue}
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`px-4 py-2 text-sm font-bold font-fira-code text-zinc-50 bg-teal-400 dark:bg-teal-600 hover:bg-teal-500 rounded ${
+                    loading && "bg-zinc-400 cursor-not-allowed"
+                  }`}
+                >
+                  {loading ? "Adding..." : "Add Product"}
+                </button>
+              </DialogCustom>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Table */}
+        <div className="rounded-xl border border-white dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800/40 backdrop-blur-md">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-white dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 uppercase text-xs tracking-widest font-fira-code">
+                <th className="px-6 py-4">Product</th>
+                <th className="px-6 py-4">Category</th>
+                <th className="px-6 py-4">Stock</th>
+                <th className="px-6 py-4">Price</th>
+                <th className="px-6 py-4">Rating</th>
               </tr>
-            ) : (
-              <>
-                {products?.map((product, index) => (
-                  <DashboardProductCard key={index} {...product} />
-                ))}
-              </>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={5}>
+                    <Loading />
+                  </td>
+                </tr>
+              ) : (
+                <>
+                  {products?.map((product, index) => (
+                    <DashboardProductCard key={index} {...product} />
+                  ))}
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

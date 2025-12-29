@@ -25,6 +25,7 @@ import {
   uploadProductImage,
 } from "@/services/upload.service";
 import Alert from "./Alert";
+import { PiWarningCircle } from "react-icons/pi";
 
 type Status = "active" | "inactive";
 type ProductCategory = "body" | "lens" | "fullset" | "accessories";
@@ -100,6 +101,7 @@ export default function DashboardProductCard({
   const [detail, setDetail] = useState(false);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
 
   const [formData, setFormData] = useState<ProductForm>({
     id,
@@ -131,8 +133,6 @@ export default function DashboardProductCard({
   const dispatch = useAppDispatch();
 
   const handleDelete = async () => {
-    const confirm = window.confirm(`Yakin ingin menghapus produk "${name}"?`);
-
     if (!confirm) return;
 
     try {
@@ -141,11 +141,13 @@ export default function DashboardProductCard({
       setAlertMessage(`Successfully deleted product "${name}"`);
       setAlertType("info");
       setShowAlert(true);
+      setOpenDelete(false);
     } catch (error) {
       console.error(error);
       setAlertMessage(`Failed to delete product "${name}"`);
       setAlertType("error");
       setShowAlert(true);
+      setOpenDelete(false);
     }
   };
 
@@ -242,19 +244,19 @@ export default function DashboardProductCard({
 
   return (
     <>
+      {/* ===== ALERT ===== */}
+      {showAlert && (
+        <Alert
+          message={alertMessage}
+          type={alertType}
+          onDismiss={dismissAlert}
+          duration={4000}
+        />
+      )}
       <tr
         onClick={handleDetail}
         className="hover:bg-zinc-300/20 dark:hover:bg-zinc-700/20 transition-colors group cursor-pointer"
       >
-        {/* ===== ALERT ===== */}
-        {showAlert && (
-          <Alert
-            message={alertMessage}
-            type={alertType}
-            onDismiss={dismissAlert}
-            duration={4000}
-          />
-        )}
         {/* Name & Image */}
         <td className="px-6 py-4">
           <div className="flex items-center gap-4">
@@ -570,12 +572,44 @@ export default function DashboardProductCard({
                     </DialogCustom>
                   </DialogContent>
                 </Dialog>
-                <button
-                  onClick={handleDelete}
-                  className="p-2 rounded-full shadow bg-rose-400 dark:bg-rose-700 hover:bg-rose-500 transition-colors duration-200 ease-out"
-                >
-                  <FaTrash />
-                </button>
+                <Dialog open={openDelete} onOpenChange={setOpenDelete}>
+                  <DialogTrigger asChild>
+                    <button className="p-2 rounded-full shadow bg-rose-400 dark:bg-rose-700 hover:bg-rose-500 transition-colors duration-200 ease-out">
+                      <FaTrash />
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent
+                    className="[&>button]:hidden max-w-sm border-none dark:bg-zinc-800"
+                    onInteractOutside={(e) => e.preventDefault()}
+                  >
+                    <DialogTitle className="hidden">Remove Item</DialogTitle>
+                    <div className="flex justify-center">
+                      <PiWarningCircle className="text-7xl text-rose-500" />
+                    </div>
+                    <div className="text-center">
+                      Are you sure you want to remove <br />
+                      <span className="font-extrabold text-rose-500">
+                        {name}
+                      </span>
+                      <br />
+                      from your cart?
+                    </div>
+                    <div className="my-5 flex justify-between gap-5 w-2/3 mx-auto font-bold">
+                      <button
+                        onClick={() => setOpenDelete(false)}
+                        className="w-full py-2 border border-rose-500 text-rose-500 hover:bg-rose-100 hover:dark:bg-rose-900/20 rounded-md cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleDelete}
+                        className="w-full py-2 bg-rose-500 hover:bg-rose-500/80 text-white rounded-md cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </div>

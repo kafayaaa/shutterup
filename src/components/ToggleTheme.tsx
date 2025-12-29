@@ -8,7 +8,7 @@ export default function ToggleTheme() {
   return (
     <button
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 hover:dark:bg-zinc-700 transition-colors duration-200 ease-out"
+      className="p-2 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-200 hover:dark:bg-zinc-700 transition-colors duration-200 ease-out"
       aria-label="Toggle theme"
     >
       <span className="sr-only">Toggle theme</span>

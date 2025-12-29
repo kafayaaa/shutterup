@@ -29,7 +29,7 @@ export default function OrdersPage() {
           <h1 className="text-2xl font-extrabold font-fira-code">
             Orders Page
           </h1>
-          <div className="w-full p-5 flex flex-col-gap-5 dark:bg-zinc-800 rounded-md border border-zinc-200">
+          <div className="w-full p-5 flex flex-col gap-5 dark:bg-zinc-800 rounded-md border border-zinc-200">
             {ordersLoading ? (
               <div className="w-full py-10 flex items-center justify-center">
                 <Loading />
@@ -83,7 +83,7 @@ export default function OrdersPage() {
                       <div key={item.id} className="w-full flex gap-5">
                         <div className="aspect-square max-h-20">
                           <Image
-                            src={item.products?.image[0] || ""}
+                            src={item.products?.image_urls[0] || ""}
                             alt={item.products?.name || "Product Image"}
                             width={160}
                             height={160}
@@ -100,11 +100,18 @@ export default function OrdersPage() {
                       </div>
                     ))}
                   </div>
-                  <div className="flex flex-col p-5 border-l border-zinc-200">
-                    <p className="text-sm text-zinc-500">Total Price</p>
-                    <span className="font-bold font-fira-code">
-                      Rp {order.total_price.toLocaleString("id")}
-                    </span>
+                  <div className="min-w-44 self-end flex flex-col gap-5 p-5 border-l border-zinc-200">
+                    <div className="flex flex-col">
+                      <p className="text-sm text-zinc-500">Total Price</p>
+                      <span className="font-bold font-fira-code">
+                        Rp {order.total_price.toLocaleString("id")}
+                      </span>
+                    </div>
+                    <div>
+                      <button className="w-full py-2 bg-rose-500 hover:bg-rose-500/75 text-sm text-white font-bold rounded-md cursor-pointer">
+                        Cancel Order
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))

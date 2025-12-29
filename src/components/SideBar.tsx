@@ -6,11 +6,13 @@ import { RiHomeLine } from "react-icons/ri";
 import { BsBox } from "react-icons/bs";
 import { usePathname } from "next/navigation";
 import ToggleTheme from "./ToggleTheme";
+import { BiReceipt } from "react-icons/bi";
 
 export default function SideBar() {
   const pathname = usePathname();
   const isDashboard = pathname === "/dashboard";
   const isProducts = pathname.includes("products");
+  const isOrders = pathname.includes("orders");
   return (
     <div className="w-full h-screen p-5 border-r border-zinc-200 dark:border-zinc-800">
       <div className="h-full flex flex-col justify-between gap-5">
@@ -33,9 +35,15 @@ export default function SideBar() {
               text="Products"
               isActive={isProducts}
             />
+            <DashboardButton
+              href="/dashboard/orders"
+              icon={<BiReceipt className="text-lg" />}
+              text="Orders"
+              isActive={isOrders}
+            />
           </div>
         </div>
-        <div className="self-center flex flex-col gap-2">
+        <div className="self-center flex justify-center items-center gap-2">
           <div className="w-fit">
             <ToggleTheme />
           </div>

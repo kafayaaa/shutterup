@@ -13,12 +13,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div>
-      <h1>Dashboard</h1>
-      <p>Nama: {profile.full_name}</p>
-      <p>Role: {profile.role}</p>
-      <p>Email: {profile.email}</p>
-      <p>Avatar: {profile.avatar_url}</p>
+    <div className="w-full h-full flex justify-center items-center">
+      <h1 className="text-9xl font-extrabold font-fira-code">Dashboard</h1>
     </div>
   );
 }
