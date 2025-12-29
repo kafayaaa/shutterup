@@ -94,7 +94,7 @@ export interface OrderItem {
   price: number;
   products?: {
     name: string;
-    image: string[];
+    image_urls: string[];
     slug: string;
   };
 }
@@ -102,8 +102,17 @@ export interface OrderItem {
 export interface Order {
   id: string;
   user_id: string;
+  address_id: string;
   total_price: number;
   status: OrderStatus;
   created_at: string;
   order_items?: OrderItem[];
+  shipping_addresses?: {
+    recipient_name: string;
+    phone_number: string;
+    address_line: string;
+    city: string;
+    province: string;
+    postal_code: string;
+  };
 }

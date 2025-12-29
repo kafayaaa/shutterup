@@ -53,6 +53,13 @@ export default function CheckoutPage() {
   const total = subtotal + shippingFee;
 
   const handlePayment = async () => {
+    if (!defaultAddress) {
+      setAlert({
+        message: "Please select or add a shipping address first.",
+        type: "error",
+      });
+      return;
+    }
     if (!profile || !profile.email) {
       setAlert({
         message: "Email not found. Please complete your profile.",
@@ -120,6 +127,7 @@ export default function CheckoutPage() {
                   p_user_id: profile.id,
                   p_total_price: total,
                   p_items: orderItems,
+                  p_address_id: defaultAddress.id,
                 }
               );
 
@@ -131,23 +139,29 @@ export default function CheckoutPage() {
                 price: item.price,
                 products: {
                   name: item.name,
-                  image: item.image,
+                  image_urls: item.image,
                   slug: item.slug,
                 },
               }));
 
               if (error) throw error;
 
-              dispatch(
-                addOrder({
-                  id: orderId,
-                  user_id: profile.id,
-                  total_price: total,
-                  status: "paid",
-                  created_at: new Date().toISOString(),
-                  order_items: completeOrderItems,
-                })
-              );
+              // Ambil data pesanan yang BARU SAJA dibuat lengkap dengan join alamat & items
+              const { data: newDetailedOrder } = await supabase
+                .from("orders")
+                .select(
+                  `
+                    *,
+                    shipping_addresses:address_id (*),
+                    order_items (*, products (*))
+                  `
+                )
+                .eq("id", orderId)
+                .single();
+
+              if (newDetailedOrder) {
+                dispatch(addOrder(newDetailedOrder)); // Masukkan data lengkap dari DB ke Redux
+              }
               // Jika berhasil di database, baru update UI
               dispatch(clearCart());
               setAlert({

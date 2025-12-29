@@ -1,4 +1,4 @@
-import { Order } from "@/types";
+import { Order, OrderStatus } from "@/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface OrderState {
@@ -38,6 +38,18 @@ const orderSlice = createSlice({
     addOrder: (state, action: PayloadAction<Order>) => {
       state.orders.unshift(action.payload);
     },
+    updateStatus: (
+      state,
+      action: PayloadAction<{ id: string; status: OrderStatus }>
+    ) => {
+      const index = state.orders.findIndex((o) => o.id === action.payload.id);
+      if (index !== -1) {
+        state.orders[index].status = action.payload.status;
+      }
+      if (state.currentOrder?.id === action.payload.id) {
+        state.currentOrder.status = action.payload.status;
+      }
+    },
   },
 });
 
@@ -47,6 +59,7 @@ export const {
   setOrderLoading,
   setOrderError,
   addOrder,
+  updateStatus,
 } = orderSlice.actions;
 
 export default orderSlice.reducer;

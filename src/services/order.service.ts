@@ -9,14 +9,25 @@ export const orderService = {
   async getUserOrders(userId: string) {
     const { data, error } = await supabase
       .from("orders")
-      .select("*")
+      .select(
+        `
+        *,
+        order_items (
+          *,
+          products (
+            name,
+            image_urls,
+            slug
+          )
+        )
+      `
+      )
       .eq("user_id", userId)
-      .order("created_at", { ascending: false }); // Pesanan terbaru di atas
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
     return data;
   },
-
   /**
    * Mengambil detail satu pesanan beserta item-item di dalamnya
    * Kita menggunakan join table (select order_items yang berelasi)
@@ -31,14 +42,48 @@ export const orderService = {
           *,
           products (
             name,
-            image,
+            image_urls,
             slug
           )
         )
       `
       )
       .eq("id", orderId)
-      .single(); // Karena kita hanya mengambil satu data
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data;
+  },
+
+  async getAllOrdersForAdmin() {
+    const { data, error } = await supabase
+      .from("orders")
+      .select(
+        `
+      *,
+      shipping_addresses (*), 
+      order_items (*, products (*))
+    `
+      )
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Admin Fetch Error:", error);
+      throw error;
+    }
+    return data;
+  },
+
+  async updateOrderStatus(
+    orderId: string,
+    newStatus: "pending" | "paid" | "shipped" | "delivered" | "canceled"
+  ) {
+    const { data, error } = await supabase
+      .from("orders")
+      .update({ status: newStatus })
+      .eq("id", orderId)
+      .select()
+      .single();
 
     if (error) throw error;
     return data;
