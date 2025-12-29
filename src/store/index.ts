@@ -5,6 +5,7 @@ import imageReducer from "./slices/imageSlice";
 import uiReducer from "./slices/uiSlice";
 import cartReducer from "./slices/cartSlice";
 import addressReducer from "./slices/addressSlice";
+import orderReducer from "./slices/orderSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     ui: uiReducer,
     cart: cartReducer,
     address: addressReducer,
+    order: orderReducer,
   },
 });
 

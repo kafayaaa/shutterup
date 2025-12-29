@@ -12,9 +12,9 @@ import { FaLocationDot, FaPhone } from "react-icons/fa6";
 import { useState } from "react";
 import Alert from "@/components/Alert";
 import { clearCart } from "@/store/slices/cartSlice";
-import { removeCart } from "@/services/cart.service";
 import { createClient } from "@/lib/supabase/client";
 import { BiCircle, BiLoaderAlt } from "react-icons/bi";
+import { addOrder } from "@/store/slices/orderSlice";
 
 export default function CheckoutPage() {
   const { profile, isLoading: profielLoading } = useAppSelector(
@@ -123,8 +123,31 @@ export default function CheckoutPage() {
                 }
               );
 
+              const completeOrderItems = items.map((item) => ({
+                id: Math.random().toString(), // id sementara
+                order_id: orderId,
+                product_id: item.product_id,
+                quantity: item.quantity,
+                price: item.price,
+                products: {
+                  name: item.name,
+                  image: item.image,
+                  slug: item.slug,
+                },
+              }));
+
               if (error) throw error;
 
+              dispatch(
+                addOrder({
+                  id: orderId,
+                  user_id: profile.id,
+                  total_price: total,
+                  status: "paid",
+                  created_at: new Date().toISOString(),
+                  order_items: completeOrderItems,
+                })
+              );
               // Jika berhasil di database, baru update UI
               dispatch(clearCart());
               setAlert({

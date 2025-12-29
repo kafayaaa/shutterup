@@ -78,3 +78,32 @@ export type CreateAddressInput = Omit<
   ShippingAddress,
   "id" | "user_id" | "created_at" | "updated_at"
 >;
+
+export type OrderStatus =
+  | "pending"
+  | "paid"
+  | "shipped"
+  | "delivered"
+  | "canceled";
+
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  product_id: string;
+  quantity: number;
+  price: number;
+  products?: {
+    name: string;
+    image: string[];
+    slug: string;
+  };
+}
+
+export interface Order {
+  id: string;
+  user_id: string;
+  total_price: number;
+  status: OrderStatus;
+  created_at: string;
+  order_items?: OrderItem[];
+}
