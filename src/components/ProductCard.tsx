@@ -11,6 +11,7 @@ interface Props {
   image_urls: string[];
   rating_avg: number;
   rating_count: number;
+  sold: number;
 }
 
 export default function ProductCard({
@@ -20,6 +21,7 @@ export default function ProductCard({
   image_urls,
   rating_avg,
   rating_count,
+  sold,
 }: Props) {
   return (
     <Link
@@ -40,13 +42,15 @@ export default function ProductCard({
         <h1 className="font-extrabold font-fira-code">
           {price.toLocaleString("id-ID")}
         </h1>
-        <div className="flex items-center gap-5 text-sm">
+        <div className="flex items-center gap-2 text-xs">
           <div className="flex items-center gap-1.5">
             <FaStar className="text-yellow-400" />
-            <p>{rating_avg}</p>
+            <p>
+              {rating_avg} ({rating_count})
+            </p>
           </div>
           <div>
-            <p>{rating_count} terjual</p>
+            <p>{sold} terjual</p>
           </div>
         </div>
       </div>

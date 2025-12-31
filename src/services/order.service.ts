@@ -78,14 +78,41 @@ export const orderService = {
     orderId: string,
     newStatus: "pending" | "paid" | "shipped" | "delivered" | "canceled"
   ) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const updateData: { status: string; cancel_reason?: string | null } = {
+      status: newStatus,
+    };
+
+    if (newStatus === "canceled" || newStatus === "delivered") {
+      updateData.cancel_reason = null;
+    }
+
     const { data, error } = await supabase
       .from("orders")
-      .update({ status: newStatus })
+      .update(updateData)
+      .eq("id", orderId)
+      .select() // .select() tanpa .single() mengembalikan Array
+      .single(); // .single() mengembalikan Object
+
+    if (error) throw error;
+
+    // Karena menggunakan .single(), 'data' adalah object, bukan array
+    console.log("Data terbaru dari DB:", data);
+    return data; // Langsung return data (Object)
+  },
+
+  updateOrderCancelReason: async (orderId: string, reason: string | null) => {
+    const { data, error } = await supabase
+      .from("orders")
+      .update({ cancel_reason: reason })
       .eq("id", orderId)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error updating cancel reason:", error.message);
+      throw error;
+    }
     return data;
   },
 };

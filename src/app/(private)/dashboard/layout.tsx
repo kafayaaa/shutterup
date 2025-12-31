@@ -29,12 +29,17 @@ export default async function DahsboardLayout({
 
   return (
     <div className="w-full min-h-screen flex">
-      <div className="relative w-60 ">
+      <div className="relative w-60 hidden lg:block">
         <div className="sticky left-0 inset-y-0 z-10 w-full">
           <SideBar />
         </div>
       </div>
-      <div className="w-full">{children}</div>
+      <div className="w-full">
+        <div className="lg:hidden fixed inset-x-0 top-0 w-full bg-zinc-50 dark:bg-zinc-800 shadow-md">
+          <SideBar />
+        </div>
+        {children}
+      </div>
     </div>
   );
 }

@@ -14,9 +14,12 @@ export default function Navbar() {
   const cartCount = useAppSelector(selectCartCount);
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-10 w-full py-5 shadow backdrop-blur-lg">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <Link href="/" className="text-2xl font-bold font-fira-code">
+    <div className="fixed top-5 left-0 right-0 z-20">
+      <div className="w-full max-w-7xl py-5 px-10 mx-auto flex justify-between items-center bg-zinc-50/20 rounded-full shadow inset-shadow-sm inset-shadow-white/50 backdrop-blur-lg">
+        <Link
+          href="/"
+          className="text-2xl text-zinc-50 font-bold font-fira-code"
+        >
           ShutterUp
         </Link>
         <nav className="flex items-center gap-5">
@@ -24,7 +27,7 @@ export default function Navbar() {
           <ul className="flex items-center gap-5">
             <li>
               <Link href="/carts" className="relative">
-                <MdOutlineShoppingCart className="text-2xl hover:text-teal-500 transition-colors duration-200 ease-out" />
+                <MdOutlineShoppingCart className="text-2xl text-zinc-50 hover:text-teal-500 transition-colors duration-200 ease-out" />
                 {cartCount > 0 && (
                   <span className="absolute -top-2 -right-2 min-w-4.5 h-4.5 px-0.5 flex items-center justify-center rounded-full bg-red-500 text-white text-[0.6rem] font-semibold">
                     {cartCount}
@@ -34,7 +37,7 @@ export default function Navbar() {
             </li>
             <li>
               <Link href="/orders">
-                <BiReceipt className="text-2xl hover:text-teal-500 transition-colors duration-200 ease-out" />
+                <BiReceipt className="text-2xl text-zinc-50 hover:text-teal-500 transition-colors duration-200 ease-out" />
               </Link>
             </li>
             {profile?.role === "admin" ? (

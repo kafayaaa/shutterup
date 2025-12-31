@@ -42,12 +42,37 @@ const orderSlice = createSlice({
       state,
       action: PayloadAction<{ id: string; status: OrderStatus }>
     ) => {
+      const { id, status } = action.payload;
+
+      // Update di list orders
+      state.orders = state.orders.map((order) =>
+        order.id === id
+          ? {
+              ...order,
+              status,
+              cancel_reason: status === "canceled" ? null : order.cancel_reason,
+            }
+          : order
+      );
+
+      // Update currentOrder jika sedang dibuka
+      if (state.currentOrder?.id === id) {
+        state.currentOrder.status = status;
+      }
+    },
+    setCancelReason: (
+      state,
+      action: PayloadAction<{ id: string; reason: string }>
+    ) => {
       const index = state.orders.findIndex((o) => o.id === action.payload.id);
       if (index !== -1) {
-        state.orders[index].status = action.payload.status;
+        state.orders[index].cancel_reason = action.payload.reason;
       }
-      if (state.currentOrder?.id === action.payload.id) {
-        state.currentOrder.status = action.payload.status;
+    },
+    clearCancelReason: (state, action: PayloadAction<string>) => {
+      const index = state.orders.findIndex((o) => o.id === action.payload);
+      if (index !== -1) {
+        state.orders[index].cancel_reason = null;
       }
     },
   },
@@ -60,6 +85,8 @@ export const {
   setOrderError,
   addOrder,
   updateStatus,
+  setCancelReason,
+  clearCancelReason,
 } = orderSlice.actions;
 
 export default orderSlice.reducer;

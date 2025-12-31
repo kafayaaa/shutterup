@@ -24,11 +24,17 @@ export default function CartsPage() {
     (state) => state.user
   );
   const { items, isLoading } = useAppSelector((state) => state.cart);
+  const { products } = useAppSelector((state) => state.product);
 
   const [selectedItem, setSelectedItem] = useState<CartItem | null>(null);
 
   const dispatch = useAppDispatch();
   const supabase = createClient();
+
+  const availableStock = (id: string) => {
+    const product = products.find((p) => p.id === id);
+    return product ? product.stock : 0;
+  };
 
   const handleClose = () => {
     setSelectedItem(null);
@@ -115,7 +121,10 @@ export default function CartsPage() {
                         className="w-20 h-20 object-cover"
                       />
                       <div>
-                        <div className="font-semibold">{item.name}</div>
+                        <h1 className="font-semibold">{item.name}</h1>
+                        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                          Available Stock: {availableStock(item.product_id)}
+                        </span>
                       </div>
                     </Link>
                     <div className="flex flex-col items-end gap-2">
@@ -132,7 +141,10 @@ export default function CartsPage() {
                         <div className="rounded-full border px-4 py-2 flex gap-2">
                           <button
                             onClick={() =>
-                              handleUpdateQuantity(item.id, item.quantity - 1)
+                              handleUpdateQuantity(
+                                item.id,
+                                Math.max(1, item.quantity - 1)
+                              )
                             }
                             className="cursor-pointer font-bold disabled:opacity-30"
                             disabled={item.quantity <= 1}
@@ -143,8 +155,17 @@ export default function CartsPage() {
                             {item.quantity}
                           </div>
                           <button
+                            disabled={
+                              item.quantity >= availableStock(item.product_id)
+                            }
                             onClick={() =>
-                              handleUpdateQuantity(item.id, item.quantity + 1)
+                              handleUpdateQuantity(
+                                item.id,
+                                Math.min(
+                                  availableStock(item.product_id),
+                                  item.quantity + 1
+                                )
+                              )
                             }
                             className="cursor-pointer font-bold"
                           >
