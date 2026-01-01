@@ -58,7 +58,8 @@ export async function getCart(): Promise<CartItem[]> {
 
 export async function addToCart(
   productId: string,
-  price: number
+  price: number,
+  quantity: number = 1
 ): Promise<CartItem> {
   const supabase = await createClient();
   const {
@@ -98,7 +99,7 @@ export async function addToCart(
     // update quantity
     const { data, error } = await supabase
       .from("cart_items")
-      .update({ quantity: existingItem.quantity + 1 })
+      .update({ quantity: existingItem.quantity + quantity })
       .eq("id", existingItem.id)
       .select()
       .single();
@@ -108,7 +109,12 @@ export async function addToCart(
     // insert baru
     const { data, error } = await supabase
       .from("cart_items")
-      .insert({ cart_id: cartId, product_id: productId, price, quantity: 1 })
+      .insert({
+        cart_id: cartId,
+        product_id: productId,
+        price,
+        quantity: quantity,
+      })
       .select()
       .single();
     if (error) {

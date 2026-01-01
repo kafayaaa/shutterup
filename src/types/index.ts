@@ -18,12 +18,15 @@ export interface Product {
   description: string;
   status: "active" | "inactive";
   condition: "new" | "used";
-  rating_avg: number;
-  rating_count: number;
+  sold: number;
+  average_rating: number;
+  review_count: number;
   discount_type: "fixed" | "percentage" | null;
   discount_value: number | string;
   discount_active: boolean;
   final_price: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreateProductInput {
@@ -105,6 +108,7 @@ export interface Order {
   address_id: string;
   total_price: number;
   status: OrderStatus;
+  cancel_reason?: string | null;
   created_at: string;
   order_items?: OrderItem[];
   shipping_addresses?: {
@@ -114,5 +118,27 @@ export interface Order {
     city: string;
     province: string;
     postal_code: string;
+  };
+  has_review?: boolean;
+}
+
+export interface Review {
+  id: string;
+  product_id: string;
+  user_id: string;
+  order_id?: string;
+  rating: number;
+  comment: string;
+  images: string[];
+  is_anonymous: boolean;
+  admin_reply: string | null;
+  replied_at: string | null;
+  created_at: string;
+  users?: {
+    full_name: string;
+    avatar_url: string;
+  };
+  products?: {
+    name: string;
   };
 }

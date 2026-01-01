@@ -44,8 +44,9 @@ interface Props {
   description: string;
   status: Status;
   condition: ProductCondition;
-  rating_avg: number;
-  rating_count: number;
+  sold: number;
+  average_rating: number;
+  review_count: number;
   discount_type: Discount_Type;
   discount_value: number | string;
   discount_active: boolean;
@@ -64,8 +65,9 @@ interface ProductForm {
   description: string;
   status: Status;
   condition: ProductCondition;
-  rating_avg: number;
-  rating_count: number;
+  sold: number;
+  average_rating: number;
+  review_count: number;
   discount_type: Discount_Type;
   discount_value: string;
   discount_active: boolean;
@@ -83,8 +85,9 @@ export default function DashboardProductCard({
   description,
   status,
   condition,
-  rating_avg,
-  rating_count,
+  sold,
+  average_rating,
+  review_count,
   discount_type,
   discount_value,
   discount_active,
@@ -115,8 +118,9 @@ export default function DashboardProductCard({
     description,
     status,
     condition,
-    rating_avg,
-    rating_count,
+    sold,
+    average_rating,
+    review_count,
     discount_type: discount_type || null,
     discount_value: discount_value ? String(discount_value) : "",
     discount_active,
@@ -302,7 +306,7 @@ export default function DashboardProductCard({
         <td className="px-6 py-4">
           <div className="flex items-center gap-1">
             <FaStar size={14} fill="currentColor" className="text-amber-400" />
-            <span className="text-sm font-bold">{rating_avg}</span>
+            <span className="text-sm font-bold">{average_rating}</span>
           </div>
         </td>
       </tr>
@@ -410,10 +414,10 @@ export default function DashboardProductCard({
                     fill="currentColor"
                     className="text-amber-400"
                   />
-                  <span className="text-sm font-bold">{rating_avg}</span>
+                  <span className="text-sm font-bold">{average_rating}</span>
                 </div>
                 <div className="text-sm text-zinc-500">
-                  <p>Rating Count: {rating_count}</p>
+                  <p>Rating Count: {review_count}</p>
                 </div>
               </div>
               <div className="absolute bottom-0 right-0 w-fit flex items-center gap-3 text-base text-zinc-50">

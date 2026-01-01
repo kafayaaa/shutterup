@@ -1,40 +1,26 @@
 "use client";
 
-import Carousel from "@/components/Carousel";
+import BrandsSection from "@/components/BrandsSection";
 import Footer from "@/components/Footer";
-import Loading from "@/components/Loading";
+import Hero from "@/components/Hero";
 import Navbar from "@/components/Navbar";
-import ProductCard from "@/components/ProductCard";
-import { useAppSelector } from "@/store/hooks";
-export default function Home() {
-  const { products, isLoading } = useAppSelector((state) => state.product);
+import ProductListSection from "@/components/ProductListSection";
+import PromoSection from "@/components/PromoSection";
 
+export default function Home() {
   return (
-    <div className="w-full min-h-screen flex flex-col gap-10 ">
+    <div className="relative w-full min-h-screen flex flex-col">
       <Navbar />
-      <div className="pt-30 w-full max-w-7xl mx-auto flex flex-col items-center gap-10">
-        <Carousel />
-        <div className="w-full grid grid-cols-5 gap-3">
-          {isLoading ? (
-            <div className="col-span-5 flex items-center justify-center">
-              <Loading />
-            </div>
-          ) : (
-            products.map((product) => (
-              <ProductCard
-                key={product.id}
-                slug={product.slug}
-                name={product.name}
-                price={product.price}
-                image_urls={product.image_urls}
-                rating_avg={product.rating_avg}
-                rating_count={product.rating_count}
-              />
-            ))
-          )}
-        </div>
+      <div
+        id="content"
+        className="w-full bg-linear-to-bl from-zinc-800 via-zinc-950 to-zinc-800"
+      >
+        <Hero />
+        <PromoSection />
+        <BrandsSection />
+        <ProductListSection />
+        <Footer />
       </div>
-      <Footer />
     </div>
   );
 }
