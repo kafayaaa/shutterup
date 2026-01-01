@@ -22,6 +22,9 @@ const firaCode = Fira_Code({
 export const metadata: Metadata = {
   title: "ShutterUp",
   description: "ShutterUp",
+  icons: {
+    icon: "/shutterup.ico",
+  },
 };
 
 export default function RootLayout({
@@ -32,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="light" suppressHydrationWarning>
       <body
-        className={`${plusJakartaSans.variable} ${firaCode.variable} font-plus-jakarta-sans antialiased bg-zinc-50 text-zinc-900 dark:bg-zinc-900 dark:text-zinc-50`}
+        className={`${plusJakartaSans.variable} ${firaCode.variable} font-plus-jakarta-sans antialiased bg-zinc-800 text-zinc-50`}
       >
         <ThemeProvider>
           <ReduxProvider>

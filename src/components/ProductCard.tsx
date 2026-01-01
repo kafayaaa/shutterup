@@ -26,21 +26,19 @@ export default function ProductCard({
   return (
     <Link
       href={`/product/${slug}`}
-      className="w-full p-3 flex flex-col items-center justify-center gap-5 rounded-lg hover:shadow-xl hover:scale-110 transition-discrete transition-all duration-200 ease-out"
+      className="w-full min-w-40 p-3 md:p-4 flex flex-col items-center gap-5 rounded-lg transition-discrete transition-all duration-200 ease-in-out bg-white/5 border border-white/10 inset-shadow-sm inset-shadow-white/80 shadow-[0_0.2rem_0.5rem_rgba(0,0,0,0.35)] hover:shadow-[0_1rem_0.75rem_rgba(0,0,0,0.35)] backdrop-blur-lg hover:-translate-y-3"
     >
-      <div className="w-full aspect-square">
-        <Image
-          src={image_urls[0]}
-          alt={name}
-          width={200}
-          height={200}
-          className="w-full h-full object-cover object-center rounded"
-        />
-      </div>
+      <Image
+        src={image_urls[0]}
+        alt={name}
+        width={300}
+        height={300}
+        className="w-full h-full object-cover object-center rounded-md"
+      />
       <div className="w-full flex flex-col gap-2">
         <h2 className="text-sm truncate">{name}</h2>
         <h1 className="font-extrabold font-fira-code">
-          {price.toLocaleString("id-ID")}
+          Rp {price.toLocaleString("id-ID")}
         </h1>
         <div className="flex items-center gap-2 text-xs">
           <div className="flex items-center gap-1.5">
@@ -50,7 +48,7 @@ export default function ProductCard({
             </p>
           </div>
           <div>
-            <p>{sold} terjual</p>
+            <p>{sold} sold</p>
           </div>
         </div>
       </div>

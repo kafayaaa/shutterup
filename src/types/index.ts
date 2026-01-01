@@ -25,6 +25,8 @@ export interface Product {
   discount_value: number | string;
   discount_active: boolean;
   final_price: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreateProductInput {

@@ -46,9 +46,9 @@ export default function AnimatedTagline() {
   }, [text, isDeleting, index]);
 
   return (
-    <div className="w-full max-w-[50%] h-52 flex items-center justify-center">
+    <div className="w-full max-w-11/12 md:max-w-[50%] mx-auto h-40 flex items-center justify-center">
       <motion.p
-        className="text-5xl font-bold text-teal-950 text-center"
+        className="text-xl md:text-5xl font-bold text-white/85 text-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
