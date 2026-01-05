@@ -1,6 +1,7 @@
 "use client";
 
 import Alert from "@/components/Alert";
+import GlassContainer from "@/components/GlassContainer";
 import Loading from "@/components/Loading";
 import LoadingScreen from "@/components/LoadingScreen";
 import Navbar from "@/components/Navbar";
@@ -84,7 +85,7 @@ export default function CartsPage() {
         />
       )}
 
-      <div className="pt-30 w-full max-w-7xl mx-auto grid grid-cols-12 gap-5">
+      <div className="pt-27 md:pt-30 pb-10 md:pb-20 w-full max-w-11/12 md:max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-5">
         {!profile ? (
           <div className="col-span-12 text-center mt-10">
             You are not logged in.
@@ -97,16 +98,13 @@ export default function CartsPage() {
           </div>
         ) : (
           <>
-            <div className="col-span-12 font-extrabold font-fira-code text-2xl">
+            <div className="col-span-1 md:col-span-12 font-extrabold font-fira-code text-2xl">
               Your Cart
             </div>
-            <div className="col-span-8 flex flex-col gap-5">
+            <div className="col-span-1 md:col-span-8 flex flex-col gap-5">
               {items.map((item) => (
-                <div
-                  key={`${item.id}-${item.slug}`}
-                  className="p-5 dark:bg-zinc-800 rounded-md shadow-md"
-                >
-                  <div className="flex justify-between items-center gap-5">
+                <GlassContainer key={`${item.id}-${item.slug}`}>
+                  <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-5">
                     <Link
                       href={item.slug ? `/product/${item.slug}` : "#"}
                       className={`flex gap-5 ${
@@ -118,7 +116,7 @@ export default function CartsPage() {
                         alt={item.name}
                         width={80}
                         height={80}
-                        className="w-20 h-20 object-cover"
+                        className="w-20 h-20 object-cover rounded-lg"
                       />
                       <div>
                         <h1 className="font-semibold">{item.name}</h1>
@@ -127,7 +125,7 @@ export default function CartsPage() {
                         </span>
                       </div>
                     </Link>
-                    <div className="flex flex-col items-end gap-2">
+                    <div className="flex md:flex-col justify-between items-center md:items-end gap-2">
                       <div className="font-bold font-fira-code">
                         Rp {item.price.toLocaleString("id")}
                       </div>
@@ -175,68 +173,72 @@ export default function CartsPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </GlassContainer>
               ))}
               <Dialog
                 open={!!selectedItem}
                 onOpenChange={(open) => !open && setSelectedItem(null)}
               >
                 <DialogContent
-                  className="[&>button]:hidden max-w-sm border-none dark:bg-zinc-800"
+                  className="[&>button]:hidden max-w-sm border-none bg-transparent"
                   onInteractOutside={(e) => e.preventDefault()}
                 >
-                  <DialogTitle className="hidden">Remove Item</DialogTitle>
-                  <div className="flex justify-center">
-                    <PiWarningCircle className="text-7xl text-rose-500" />
-                  </div>
-                  <div className="text-center">
-                    Are you sure you want to remove <br />
-                    <span className="font-extrabold text-rose-500">
-                      {selectedItem?.name}
-                    </span>
-                    <br />
-                    from your cart?
-                  </div>
-                  <div className="my-5 flex justify-between gap-5 w-2/3 mx-auto font-bold">
-                    <button
-                      onClick={handleClose}
-                      className="w-full py-2 border border-rose-500 text-rose-500 hover:bg-rose-100 hover:dark:bg-rose-900/20 rounded-md cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() =>
-                        selectedItem && handleRemoveItem(selectedItem.id)
-                      }
-                      className="w-full py-2 bg-rose-500 hover:bg-rose-500/80 text-white rounded-md cursor-pointer"
-                    >
-                      Remove
-                    </button>
-                  </div>
+                  <GlassContainer>
+                    <DialogTitle className="hidden">Remove Item</DialogTitle>
+                    <div className="flex justify-center">
+                      <PiWarningCircle className="text-7xl text-rose-500" />
+                    </div>
+                    <div className="text-center">
+                      Are you sure you want to remove <br />
+                      <span className="font-extrabold text-rose-500">
+                        {selectedItem?.name}
+                      </span>
+                      <br />
+                      from your cart?
+                    </div>
+                    <div className="my-5 flex justify-between gap-5 w-2/3 mx-auto font-bold">
+                      <button
+                        onClick={handleClose}
+                        className="w-full py-2 border border-rose-500 text-rose-500 hover:bg-rose-100 hover:dark:bg-rose-900/20 rounded-md cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() =>
+                          selectedItem && handleRemoveItem(selectedItem.id)
+                        }
+                        className="w-full py-2 bg-rose-500 hover:bg-rose-500/80 text-white rounded-md cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </GlassContainer>
                 </DialogContent>
               </Dialog>
             </div>
-            <div className="col-span-4">
-              <div className="flex flex-col gap-3 p-5 dark:bg-zinc-800 rounded-md shadow-md">
-                <div className="font-semibold">Order Summary</div>
-                <div className="flex justify-between mt-2">
-                  <span>Total</span>
-                  <span className="font-extrabold font-fira-code">
-                    Rp{" "}
-                    {items
-                      .reduce(
-                        (acc, item) => acc + item.price * item.quantity,
-                        0
-                      ) // Harga * Qty
-                      .toLocaleString("id")}
-                  </span>
+            <div className="col-span-1 md:col-span-4">
+              <GlassContainer>
+                <div className="flex flex-col gap-3">
+                  <div className="font-semibold">Order Summary</div>
+                  <div className="flex justify-between mt-2">
+                    <span>Total</span>
+                    <span className="font-extrabold font-fira-code">
+                      Rp{" "}
+                      {items
+                        .reduce(
+                          (acc, item) => acc + item.price * item.quantity,
+                          0
+                        ) // Harga * Qty
+                        .toLocaleString("id")}
+                    </span>
+                  </div>
+                  <div className="mt-3 w-full py-2 flex items-center justify-center rounded-md bg-teal-500 hover:bg-teal-500/80 text-zinc-50 font-extrabold cursor-pointer">
+                    <Link href="/checkout" className="">
+                      Checkout Now
+                    </Link>
+                  </div>
                 </div>
-                <div className="mt-3 w-full py-2 flex items-center justify-center rounded-md bg-teal-500 hover:bg-teal-500/80 text-zinc-50 font-extrabold cursor-pointer">
-                  <Link href="/checkout" className="">
-                    Checkout Now
-                  </Link>
-                </div>
-              </div>
+              </GlassContainer>
             </div>
           </>
         )}

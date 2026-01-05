@@ -11,16 +11,13 @@ export const orderService = {
       .from("orders")
       .select(
         `
+      *,
+      order_items (
         *,
-        order_items (
-          *,
-          products (
-            name,
-            image_urls,
-            slug
-          )
-        )
-      `
+        products (name, image_urls, slug)
+      ),
+      user:users (*) -- Gunakan aliasing yang sama dengan admin
+    `
       )
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
@@ -62,7 +59,11 @@ export const orderService = {
         `
       *,
       shipping_addresses (*), 
-      order_items (*, products (*))
+      order_items (
+        *, 
+        products (*)
+      ),
+      user:users (*)
     `
       )
       .order("created_at", { ascending: false });

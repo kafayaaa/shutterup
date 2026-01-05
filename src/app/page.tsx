@@ -11,10 +11,7 @@ export default function Home() {
   return (
     <div className="relative w-full min-h-screen flex flex-col">
       <Navbar />
-      <div
-        id="content"
-        className="w-full bg-linear-to-bl from-zinc-800 via-zinc-950 to-zinc-800"
-      >
+      <div className="w-full bg-linear-to-bl from-zinc-700 via-zinc-900 to-zinc-700">
         <Hero />
         <PromoSection />
         <BrandsSection />

@@ -15,6 +15,7 @@ import { clearCart } from "@/store/slices/cartSlice";
 import { createClient } from "@/lib/supabase/client";
 import { BiCircle, BiLoaderAlt } from "react-icons/bi";
 import { addOrder } from "@/store/slices/orderSlice";
+import GlassContainer from "@/components/GlassContainer";
 
 export default function CheckoutPage() {
   const { profile, isLoading: profielLoading } = useAppSelector(
@@ -217,16 +218,16 @@ export default function CheckoutPage() {
       )}
       <div className="w-full min-h-screen">
         <Navbar />
-        <div className="w-full max-w-7xl mx-auto">
-          <div className="pt-30 pb-10 w-full grid grid-cols-12 gap-7">
-            <div className="col-span-12">
+        <div className="w-full max-w-11/12 md:max-w-7xl mx-auto">
+          <div className="pt-27 md:pt-30 pb-10 w-full grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-7">
+            <div className="col-span-1 md:col-span-12">
               <h1 className="text-2xl font-extrabold font-fira-code">
                 Checkout
               </h1>
             </div>
-            <div className="col-span-8 flex flex-col gap-7">
+            <div className="col-span-1 md:col-span-8 flex flex-col gap-4 md:gap-7">
               {/* ===== SHIPPING ADDRESS ===== */}
-              <div className="w-full p-5 dark:bg-zinc-800 rounded-md shadow-md">
+              <GlassContainer>
                 <h2 className="font-bold mb-3">Shipping Address</h2>
                 {addressLoading ? (
                   <div className="w-full py-10 flex justify-center items-center">
@@ -252,9 +253,9 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                 )}
-              </div>
+              </GlassContainer>
               {/* ===== CART ITEMS ===== */}
-              <div className="w-full p-5 dark:bg-zinc-800 rounded-md shadow-md">
+              <GlassContainer>
                 <h2 className="font-bold mb-3">Cart Items</h2>
                 {cartLoading ? (
                   <div className="w-full py-10 flex justify-center items-center">
@@ -289,53 +290,55 @@ export default function CheckoutPage() {
                     ))}
                   </div>
                 )}
-              </div>
+              </GlassContainer>
             </div>
             {/* ===== PAYMENT METHOD ===== */}
-            <div className="col-span-4">
-              <div className="w-full p-5 flex flex-col gap-5 dark:bg-zinc-800 rounded-md shadow-md">
-                <h2 className="font-bold border-b pb-2">Order Summary</h2>
+            <div className="col-span-1 md:col-span-4">
+              <GlassContainer>
+                <div className="flex flex-col gap-5">
+                  <h2 className="font-bold border-b pb-2">Order Summary</h2>
 
-                <div className="flex flex-col gap-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>Rp. {subtotal.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Shipping</span>
-                    <span>Rp. {shippingFee.toLocaleString()}</span>
-                  </div>
-                  <hr className="border-zinc-700" />
-                  <div className="flex justify-between font-extrabold text-lg text-teal-500">
-                    <span>Total</span>
-                    <span>Rp. {total.toLocaleString()}</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handlePayment}
-                  disabled={!defaultAddress || items.length === 0 || loading}
-                  className="w-full py-3 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-md transition-colors disabled:bg-zinc-600 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <div className="w-full flex justify-center items-center gap-2">
-                      <div className="relative h-8 w-8 text-3xl">
-                        <BiCircle className="absolute top-0 left-0 text-white" />
-                        <BiLoaderAlt className="absolute top-0 left-0 z-10 animate-spin text-teal-500/60" />
-                      </div>
-                      <p>Processing...</p>
+                  <div className="flex flex-col gap-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Subtotal</span>
+                      <span>Rp. {subtotal.toLocaleString()}</span>
                     </div>
-                  ) : (
-                    "Proceed to Payment"
-                  )}
-                </button>
+                    <div className="flex justify-between">
+                      <span>Shipping</span>
+                      <span>Rp. {shippingFee.toLocaleString()}</span>
+                    </div>
+                    <hr className="border-zinc-700" />
+                    <div className="flex justify-between font-extrabold text-lg text-teal-500">
+                      <span>Total</span>
+                      <span>Rp. {total.toLocaleString()}</span>
+                    </div>
+                  </div>
 
-                {!defaultAddress && (
-                  <p className="text-xs text-rose-500 text-center mt-2">
-                    Please add a shipping address first.
-                  </p>
-                )}
-              </div>
+                  <button
+                    onClick={handlePayment}
+                    disabled={!defaultAddress || items.length === 0 || loading}
+                    className="w-full py-3 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-md transition-colors disabled:bg-zinc-600 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <div className="w-full flex justify-center items-center gap-2">
+                        <div className="relative h-8 w-8 text-3xl">
+                          <BiCircle className="absolute top-0 left-0 text-white" />
+                          <BiLoaderAlt className="absolute top-0 left-0 z-10 animate-spin text-teal-500/60" />
+                        </div>
+                        <p>Processing...</p>
+                      </div>
+                    ) : (
+                      "Proceed to Payment"
+                    )}
+                  </button>
+
+                  {!defaultAddress && (
+                    <p className="text-xs text-rose-500 text-center mt-2">
+                      Please add a shipping address first.
+                    </p>
+                  )}
+                </div>
+              </GlassContainer>
             </div>
           </div>
         </div>

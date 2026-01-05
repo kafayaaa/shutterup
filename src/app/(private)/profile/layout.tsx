@@ -1,5 +1,6 @@
 "use client";
 
+import GlassContainer from "@/components/GlassContainer";
 import LoadingScreen from "@/components/LoadingScreen";
 import LogoutButton from "@/components/LogoutButton";
 import Navbar from "@/components/Navbar";
@@ -32,35 +33,37 @@ export default function ProfileLayout({
             Profile
           </h1>
           <div className="col-span-3">
-            <div className="w-full flex flex-col gap-2 dark:bg-zinc-800 rounded-md shadow-md p-5">
-              <Link
-                href="/profile/personal-data"
-                className={`w-full py-3 text-center hover:bg-zinc-100 ${
-                  isPersonalDataPage
-                    ? "border-l-4 border-teal-500 text-teal-500 font-extrabold"
-                    : "text-gray-700 dark:text-gray-300"
-                }`}
-              >
-                Personal Data
-              </Link>
-              <Link
-                href="/profile/address"
-                className={`w-full py-3 text-center hover:bg-zinc-100 ${
-                  isAddressPage
-                    ? "border-l-4 border-teal-500 text-teal-500 font-extrabold"
-                    : "text-gray-700 dark:text-gray-300"
-                }`}
-              >
-                Address
-              </Link>
-              <div className="mt-5">
-                <LogoutButton />
+            <GlassContainer className="rounded-lg">
+              <div className="flex flex-col gap-2">
+                <Link
+                  href="/profile/personal-data"
+                  className={`w-full py-3 text-center hover:bg-zinc-700 ${
+                    isPersonalDataPage
+                      ? "border-l-4 border-teal-500 text-teal-500 font-extrabold"
+                      : "text-gray-700 dark:text-gray-300"
+                  }`}
+                >
+                  Personal Data
+                </Link>
+                <Link
+                  href="/profile/address"
+                  className={`w-full py-3 text-center hover:bg-zinc-700 ${
+                    isAddressPage
+                      ? "border-l-4 border-teal-500 text-teal-500 font-extrabold"
+                      : "text-gray-700 dark:text-gray-300"
+                  }`}
+                >
+                  Address
+                </Link>
+                <div className="mt-5">
+                  <LogoutButton />
+                </div>
               </div>
-            </div>
+            </GlassContainer>
           </div>
           {/* ===== PERSONAL DATA ===== */}
-          <div className="col-span-9 p-5 dark:bg-zinc-800 rounded-md shadow-md">
-            {children}
+          <div className="col-span-9">
+            <GlassContainer className="rounded-lg">{children}</GlassContainer>
           </div>
         </div>
       </div>

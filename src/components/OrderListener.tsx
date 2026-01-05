@@ -30,6 +30,8 @@ export default function OrderListener() {
 
       // Ambil role dari user_metadata (bukan user.role)
       const userRole = user.user_metadata?.role;
+      console.log("Logged in User ID:", user.id);
+      console.log("Detected Role:", userRole);
 
       try {
         let ordersData;

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FaPenToSquare, FaStar, FaTrash } from "react-icons/fa6";
 import useEmblaCarousel from "embla-carousel-react";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
@@ -16,7 +16,7 @@ import DashboardTextarea from "./DashboardTextarea";
 import DashboardDropdown from "./DashboardDropdown";
 import DashboardOption from "./DashboardOption";
 import DashboardInput from "./DashboardInput";
-import { UpdateProductPayload } from "@/types";
+import { Product, SpecKey, UpdateProductPayload } from "@/types";
 import { resetImages } from "@/store/slices/imageSlice";
 import { updateProduct as updateProductSlice } from "@/store/slices/productSlice";
 import { store } from "@/store";
@@ -26,120 +26,137 @@ import {
 } from "@/services/upload.service";
 import Alert from "./Alert";
 import { PiWarningCircle } from "react-icons/pi";
+import slugify from "@/utils/slugify";
 
-type Status = "active" | "inactive";
-type ProductCategory = "body" | "lens" | "fullset" | "accessories";
-type ProductCondition = "new" | "used";
-type Discount_Type = "fixed" | "percentage" | null;
+type Props = Product;
 
-interface Props {
-  id: string;
-  user_id: string;
-  name: string;
-  slug: string;
-  category: ProductCategory;
-  price: number | string;
-  stock: number | string;
-  image_urls: string[];
-  description: string;
-  status: Status;
-  condition: ProductCondition;
-  sold: number;
-  average_rating: number;
-  review_count: number;
-  discount_type: Discount_Type;
-  discount_value: number | string;
-  discount_active: boolean;
-  final_price: number;
-}
-
-interface ProductForm {
-  id: string;
-  user_id: string;
-  name: string;
-  slug: string;
-  category: ProductCategory;
+interface ProductForm
+  extends Omit<
+    Product,
+    | "price"
+    | "stock"
+    | "weight"
+    | "width"
+    | "height"
+    | "length"
+    | "discount_value"
+  > {
   price: string;
   stock: string;
-  image_urls: string[];
-  description: string;
-  status: Status;
-  condition: ProductCondition;
-  sold: number;
-  average_rating: number;
-  review_count: number;
-  discount_type: Discount_Type;
+  weight: string;
+  width: string;
+  height: string;
+  length: string;
   discount_value: string;
-  discount_active: boolean;
-  final_price: number;
 }
 
-export default function DashboardProductCard({
-  id,
-  name,
-  slug,
-  category,
-  price,
-  stock,
-  image_urls,
-  description,
-  status,
-  condition,
-  sold,
-  average_rating,
-  review_count,
-  discount_type,
-  discount_value,
-  discount_active,
-  final_price,
-}: Props) {
-  const profile = useAppSelector((state) => state.user.profile);
+export default function DashboardProductCard(props: Props) {
+  const { categories: categoriesData } = useAppSelector(
+    (state) => state.category
+  );
+  const { brands } = useAppSelector((state) => state.brand);
 
+  const {
+    id,
+    name,
+    slug,
+    image_urls,
+    description,
+    status,
+    condition,
+    price,
+    final_price,
+    stock,
+    sold,
+    category_id,
+    categories,
+    average_rating,
+    review_count,
+    discount_type,
+    discount_value,
+    discount_active,
+    weight,
+    width,
+    height,
+    length,
+    product_specs,
+  } = props;
+
+  const profile = useAppSelector((state) => state.user.profile);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState<"success" | "error" | "info">(
     "info"
   );
-
   const [detail, setDetail] = useState(false);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
 
+  const [availableSpecs, setAvailableSpecs] = useState<SpecKey[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [formData, setFormData] = useState<ProductForm>({
-    id,
-    user_id: profile?.id || "",
-    name,
-    slug,
-    category,
+    ...props,
     price: String(price),
     stock: String(stock),
-    image_urls,
-    description,
-    status,
-    condition,
-    sold,
-    average_rating,
-    review_count,
-    discount_type: discount_type || null,
-    discount_value: discount_value ? String(discount_value) : "",
-    discount_active,
-    final_price,
+    weight: String(weight),
+    width: String(width),
+    height: String(height),
+    length: String(length),
+    discount_value: String(discount_value),
   });
 
   const handleDetail = () => setDetail(!detail);
-
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
-
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
-
   const dispatch = useAppDispatch();
 
-  const handleDelete = async () => {
-    if (!confirm) return;
+  useEffect(() => {
+    if (formData.category_id) {
+      const category = categoriesData.find(
+        (c) => c.id === formData.category_id
+      );
+      if (category && Array.isArray(category.spec_keys)) {
+        setAvailableSpecs(category.spec_keys);
+      } else {
+        setAvailableSpecs([]);
+      }
+    }
+  }, [formData.category_id, categoriesData]);
 
+  const handleNameChange = (val: string) => {
+    setFormData({
+      ...formData,
+      name: val,
+      slug: slugify(val), // Otomatis generate slug setiap nama berubah
+    });
+  };
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newId = e.target.value;
+    setFormData({
+      ...formData,
+      category_id: newId,
+      product_specs: {}, // Reset spek jika kategori berubah agar tidak campur aduk
+    });
+  };
+
+  const handleSpecChange = (specName: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      product_specs: {
+        ...(prev.product_specs || {}),
+        [specName]: value,
+      },
+    }));
+  };
+
+  const handleDelete = async () => {
     try {
+      if (image_urls && image_urls.length > 0) {
+        await deleteProductImages(image_urls);
+      }
       await deleteProduct(id, image_urls);
       dispatch(removeProduct(id));
       setAlertMessage(`Successfully deleted product "${name}"`);
@@ -151,7 +168,6 @@ export default function DashboardProductCard({
       setAlertMessage(`Failed to delete product "${name}"`);
       setAlertType("error");
       setShowAlert(true);
-      setOpenDelete(false);
     }
   };
 
@@ -161,27 +177,19 @@ export default function DashboardProductCard({
 
     try {
       const imagesState = store.getState().image.images;
-
-      // 1. Pisahkan existing & new images
       const existingUrls = imagesState
         .filter((img) => img.type === "existing")
         .map((img) => img.url);
-
       const deletedUrls = image_urls.filter(
         (url) => !existingUrls.includes(url)
       );
 
-      if (deletedUrls.length > 0) {
-        await deleteProductImages(deletedUrls);
-      }
+      if (deletedUrls.length > 0) await deleteProductImages(deletedUrls);
 
       const newFiles = imagesState
         .filter((img) => img.type === "new" && img.file)
         .map((img) => img.file as File);
-
-      // 2. Upload image baru (jika ada)
       let uploadedUrls: string[] = [];
-
       if (newFiles.length > 0) {
         uploadedUrls = await Promise.all(
           newFiles.map((file) => uploadProductImage(file))
@@ -190,50 +198,67 @@ export default function DashboardProductCard({
 
       const finalImageUrls = [...existingUrls, ...uploadedUrls];
 
-      // 3. Hitung final price
-      const priceNumber = Number(formData.price);
-      const discountNumber = Number(formData.discount_value || 0);
-
-      let calculatedFinalPrice = priceNumber;
+      // Kalkulasi Harga
+      const priceNum = Number(formData.price);
+      const discNum = Number(formData.discount_value || 0);
+      let calcFinalPrice = priceNum;
 
       if (formData.discount_active) {
         if (formData.discount_type === "percentage") {
-          calculatedFinalPrice =
-            priceNumber - (priceNumber * discountNumber) / 100;
+          calcFinalPrice = priceNum - (priceNum * discNum) / 100;
         } else if (formData.discount_type === "fixed") {
-          calculatedFinalPrice = priceNumber - discountNumber;
+          calcFinalPrice = priceNum - discNum;
         }
       }
 
-      // 4. Payload update
-      const { user_id, ...safeFormData } = formData;
+      const { brands: _b, categories: _c, ...cleanFormData } = formData;
 
+      // Payload Mapping sesuai Interface Product Baru
       const payload: UpdateProductPayload = {
-        ...safeFormData,
-        price: Number(formData.price),
+        ...cleanFormData,
+        slug: formData.slug,
+        price: priceNum,
         stock: Number(formData.stock),
+        weight: Number(formData.weight),
+        width: Number(formData.width),
+        height: Number(formData.height),
+        length: Number(formData.length),
         discount_type: formData.discount_active ? formData.discount_type : null,
-        discount_value: Number(formData.discount_value),
+        discount_value: discNum,
+        product_specs: formData.product_specs,
         image_urls: finalImageUrls,
-        final_price: Math.max(calculatedFinalPrice, 0),
+        final_price: Math.max(calcFinalPrice, 0),
       };
 
-      // 5. Update ke backend
       const updatedProduct = await updateProduct(payload);
-
-      // 6. Update redux product list
       dispatch(updateProductSlice(updatedProduct));
-
-      // 7. Cleanup
       dispatch(resetImages());
+      setFormData({
+        ...formData,
+        name: "",
+        slug: "",
+        category_id: "",
+        brand_id: "",
+        product_specs: {},
+        image_urls: [],
+        discount_active: false,
+        discount_type: null,
+        discount_value: "",
+        final_price: 0,
+        price: "",
+        stock: "",
+        weight: "",
+        width: "",
+        height: "",
+        length: "",
+      });
       setOpen(false);
-
-      setAlertMessage(`Successfully updated product "${name}"`);
+      setAlertMessage(`Successfully updated "${name}"`);
       setAlertType("success");
       setShowAlert(true);
     } catch (error) {
       console.error(error);
-      setAlertMessage(`Failed to update product "${name}"`);
+      setAlertMessage("Failed to update product");
       setAlertType("error");
       setShowAlert(true);
     } finally {
@@ -241,27 +266,22 @@ export default function DashboardProductCard({
     }
   };
 
-  const dismissAlert = () => {
-    setShowAlert(false);
-    setAlertMessage("");
-  };
-
   return (
     <>
-      {/* ===== ALERT ===== */}
       {showAlert && (
-        <Alert
-          message={alertMessage}
-          type={alertType}
-          onDismiss={dismissAlert}
-          duration={4000}
-        />
+        <div className="fixed top-10 z-40">
+          <Alert
+            message={alertMessage}
+            type={alertType}
+            onDismiss={() => setShowAlert(false)}
+          />
+        </div>
       )}
+
       <tr
         onClick={handleDetail}
-        className="hover:bg-zinc-300/20 dark:hover:bg-zinc-700/20 transition-colors group cursor-pointer"
+        className="hover:bg-zinc-300/20 dark:hover:bg-zinc-700/20 transition-colors group cursor-pointer border-b border-zinc-100 dark:border-zinc-800"
       >
-        {/* Name & Image */}
         <td className="px-6 py-4">
           <div className="flex items-center gap-4">
             <Image
@@ -271,59 +291,42 @@ export default function DashboardProductCard({
               height={48}
               className="w-12 h-12 rounded-lg object-cover bg-zinc-800"
             />
-            <div className="w-full">
-              <div className="font-bold truncate">{name}</div>
-            </div>
+            <div className="font-bold truncate max-w-50">{name}</div>
           </div>
         </td>
-
-        {/* Category */}
-        <td className="px-6 py-4">
-          <span className="px-2 py-1 bg-teal-500 text-zinc-50 rounded text-[10px] font-bold uppercase tracking-wider">
-            {category}
-          </span>
+        <td className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-teal-500">
+          {categories?.name}
         </td>
-
-        {/* Stock */}
-        <td className="px-6 py-4 font-fira-code text-sm">
-          {Number(stock) <= 5 ? (
-            <span className="text-rose-400 font-bold">{stock} (Low)</span>
-          ) : (
-            <span>{stock}</span>
-          )}
+        <td className="px-6 py-4 font-fira-code text-sm">{stock}</td>
+        <td className="px-6 py-4 font-fira-code text-sm">{sold}</td>
+        <td className="px-6 py-4 font-bold">
+          Rp{final_price.toLocaleString()}
         </td>
-
-        {/* Price & Discount */}
         <td className="px-6 py-4">
-          <div className="flex flex-col font-fira-code">
+          <div className="flex items-center gap-1">
+            <FaStar size={14} className="text-amber-400" />
             <span className="text-sm font-bold">
-              Rp{final_price.toLocaleString()}
+              {average_rating} ({review_count})
             </span>
           </div>
         </td>
-
-        {/* Rating */}
-        <td className="px-6 py-4">
-          <div className="flex items-center gap-1">
-            <FaStar size={14} fill="currentColor" className="text-amber-400" />
-            <span className="text-sm font-bold">{average_rating}</span>
-          </div>
-        </td>
       </tr>
+
       <tr className={`${detail ? "table-row" : "hidden"}`}>
-        <td colSpan={6} className="px-6 py-4">
-          <div className="w-full flex gap-6 border border-zinc-200 dark:border-zinc-700 rounded p-5">
-            <div className="self-center relative w-96 max-h-96 overflow-hidden rounded">
-              <div className="overflow-hidden" ref={emblaRef}>
-                <div className="flex">
+        <td colSpan={6} className="px-6 py-4 bg-zinc-50/50 dark:bg-zinc-900/20">
+          <div className="flex flex-col md:flex-row gap-6 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-sm">
+            {/* Carousel Area */}
+            <div className="relative w-full md:w-80 h-80 overflow-hidden rounded-lg bg-zinc-200 dark:bg-zinc-800">
+              <div className="overflow-hidden h-full" ref={emblaRef}>
+                <div className="flex h-full">
                   {image_urls.map((image, index) => (
-                    <div key={index} className="h-full flex-[0_0_100%]">
+                    <div key={index} className="flex-[0_0_100%] h-full">
                       <Image
                         src={image}
                         alt={name}
-                        width={200}
-                        height={200}
-                        className="w-full h-full object-cover object-center rounded"
+                        width={400}
+                        height={400}
+                        className="w-full h-full object-cover"
                       />
                     </div>
                   ))}
@@ -331,196 +334,329 @@ export default function DashboardProductCard({
               </div>
               <button
                 onClick={scrollPrev}
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-white p-1.5 rounded-full shadow cursor-pointer"
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-lg"
               >
-                <IoIosArrowBack className="text-base dark:text-zinc-950 hover:text-teal-500 transition-colors duration-200 ease-out" />
+                <IoIosArrowBack />
               </button>
-
               <button
                 onClick={scrollNext}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-white p-1.5 rounded-full shadow cursor-pointer"
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-lg"
               >
-                <IoIosArrowForward className="text-base dark:text-zinc-950 hover:text-teal-500 transition-colors duration-200 ease-out" />
+                <IoIosArrowForward />
               </button>
             </div>
-            <div className="relative w-full flex gap-6">
-              {/* Text Description */}
-              <div className="w-full max-w-1/3 space-y-5">
-                <div className="overflow-hidden">
-                  <h1 className="text-base font-bold mb-1 font-heading">
-                    Product Description
-                  </h1>
-                  <p className="max-w-80 text-zinc-500 leading-relaxed text-sm text-clip text-wrap">
-                    {description}
+
+            {/* Info Area */}
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative">
+              <section>
+                <h3 className="text-xs font-black uppercase text-zinc-400 mb-2">
+                  Dimensions & Weight
+                </h3>
+                <div className="text-sm space-y-1">
+                  <p>Weight: {weight}g</p>
+                  <p>
+                    Size: {length} x {width} x {height} cm
                   </p>
                 </div>
-                <div>
-                  <h1 className="text-base font-bold mb-1 font-heading">
-                    Product Condition
-                  </h1>
-                  <p className="text-zinc-500 leading-relaxed text-sm">
-                    {condition === "new" ? "New" : "Second"}
+              </section>
+              <section>
+                <h3 className="text-xs font-black uppercase text-zinc-400 mb-2">
+                  Status & Condition
+                </h3>
+                <div className="text-sm space-y-1">
+                  <p>Condition: {condition === "new" ? "New" : "Used"}</p>
+                  <p>
+                    Status:{" "}
+                    <span
+                      className={
+                        status === "active" ? "text-green-500" : "text-red-500"
+                      }
+                    >
+                      {status}
+                    </span>
                   </p>
                 </div>
-                <div>
-                  <h1 className="text-base font-bold mb-1 font-heading">
-                    Product Status
-                  </h1>
-                  <p className="text-zinc-500 leading-relaxed text-sm">
-                    {status === "active" ? "Active" : "Inactive"}
+              </section>
+
+              <section>
+                <h3 className="text-xs font-black uppercase text-zinc-400 mb-2">
+                  Pricing Detail
+                </h3>
+                <div className="text-sm space-y-1">
+                  <p className="line-through text-zinc-400">
+                    Rp {price.toLocaleString()}
+                  </p>
+                  <p className="font-bold text-teal-500">
+                    Rp {final_price.toLocaleString()}
                   </p>
                 </div>
-              </div>
-              {/* Price Detail */}
-              <div className="w-full">
-                <h1 className="text-base font-bold mb-1 font-heading">
-                  Price Detail
-                </h1>
-                <p className="text-zinc-500 leading-relaxed text-sm">
-                  Original Price: Rp {price.toLocaleString()}
-                </p>
-                <p className="text-zinc-500 leading-relaxed text-sm">
-                  Discount Status: {discount_active ? "Active" : "Inactive"}
-                </p>
-                <p className="text-zinc-500 leading-relaxed text-sm">
-                  Discount Type:{" "}
-                  {discount_type === "percentage"
-                    ? "Percentage"
-                    : discount_type === "fixed"
-                    ? "Nominal"
-                    : "-"}
-                </p>
-                <p className="text-zinc-500 leading-relaxed text-sm">
-                  Discount Value:{" "}
-                  {discount_type === "percentage"
-                    ? `${discount_value}%`
-                    : discount_type === "fixed"
-                    ? `Rp ${discount_value.toLocaleString()}`
-                    : "-"}
-                </p>
-                <p className="text-zinc-500 leading-relaxed text-sm">
-                  Final Price: Rp {final_price.toLocaleString()}
-                </p>
-              </div>
-              {/* Rating Detail */}
-              <div className="w-full">
-                <h1 className="text-base font-bold mb-1 font-heading">
-                  Rating Detail
-                </h1>
-                <div className="flex items-center gap-1 text-sm text-zinc-500">
-                  <p>Overall Rating:</p>
-                  <FaStar
-                    size={14}
-                    fill="currentColor"
-                    className="text-amber-400"
-                  />
-                  <span className="text-sm font-bold">{average_rating}</span>
+              </section>
+
+              <section>
+                <h3 className="text-xs font-black uppercase text-zinc-400 mb-2">
+                  Description
+                </h3>
+                <div className="text-sm space-y-1">
+                  <p>{description}</p>
                 </div>
-                <div className="text-sm text-zinc-500">
-                  <p>Rating Count: {review_count}</p>
+              </section>
+
+              <section className="col-span-2">
+                <h3 className="text-xs font-black uppercase text-zinc-400 mb-2">
+                  Specifications
+                </h3>
+                <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+                  {product_specs && Object.keys(product_specs).length > 0 ? (
+                    Object.entries(product_specs).map(([key, value]) => (
+                      <div
+                        key={key}
+                        className="flex justify-between border-b border-zinc-700/50 pb-1"
+                      >
+                        <span className="text-zinc-400 text-xs uppercase">
+                          {key}
+                        </span>
+                        <span className="text-zinc-200 font-medium text-sm">
+                          {String(value)}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-zinc-500 italic text-xs">
+                      No specifications available
+                    </p>
+                  )}
                 </div>
-              </div>
-              <div className="absolute bottom-0 right-0 w-fit flex items-center gap-3 text-base text-zinc-50">
+              </section>
+
+              {/* Action Buttons */}
+              <div className="md:absolute md:top-0 md:right-0 flex gap-2">
+                {/* ===== EDIT BUTTON ===== */}
                 <Dialog
                   open={open}
                   onOpenChange={(isOpen) => {
                     setOpen(isOpen);
-
-                    if (!isOpen) {
-                      dispatch(resetImages());
-                    }
+                    if (!isOpen) dispatch(resetImages());
                   }}
                 >
                   <DialogTrigger asChild>
-                    <button
-                      type="button"
-                      className="p-2 rounded-full shadow bg-slate-400 dark:bg-slate-600 hover:bg-slate-500 transition-colors duration-200 ease-out"
-                    >
+                    <button className="p-3 rounded-full bg-zinc-100 dark:bg-zinc-700 hover:scale-110 transition-transform">
                       <FaPenToSquare />
                     </button>
                   </DialogTrigger>
-                  <DialogContent className="border-none bg-zinc-50 dark:bg-zinc-800 rounded-xl overflow-y-auto hide-scrollbar">
+                  <DialogContent className="max-h-10/12 border-none bg-zinc-50 dark:bg-zinc-800 rounded-xl overflow-y-auto hide-scrollbar">
                     <DialogTitle className="font-extrabold font-fira-code">
-                      Edit Product
+                      Edit {name}
                     </DialogTitle>
                     <DialogCustom onSubmit={handleSubmit}>
-                      <div className="flex gap-3 items-center">
-                        <div className="w-2/3">
+                      <div className="grid grid-cols-3 gap-5">
+                        {/* ===== NAME ===== */}
+                        <div className="col-span-2">
                           <DashboardInput
-                            title="Name"
+                            title="Product Name"
                             name="name"
                             type="text"
                             value={formData.name}
-                            onChange={(v) =>
-                              setFormData({ ...formData, name: v })
-                            }
+                            onChange={handleNameChange}
                             required
                           />
                         </div>
-                        <div className="w-1/3">
-                          <DashboardDropdown<ProductCategory>
-                            name="category"
-                            title="Category"
-                            value={formData.category}
-                            onChange={(v) =>
-                              setFormData({ ...formData, category: v })
-                            }
+                        {/* ===== STATUS ===== */}
+                        <div className="col-span-1">
+                          <DashboardDropdown
+                            name="status"
+                            title="Status"
                             required
+                            value={formData.status}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                status: e.target.value as "active" | "inactive",
+                              })
+                            }
                           >
-                            <DashboardOption value="body" text="Body" />
-                            <DashboardOption value="lens" text="Lens" />
-                            <DashboardOption value="fullset" text="Full Set" />
-                            <DashboardOption
-                              value="accessories"
-                              text="Accessories"
-                            />
+                            <DashboardOption value="active" text="Active" />
+                            <DashboardOption value="inactive" text="Inactive" />
                           </DashboardDropdown>
                         </div>
                       </div>
-                      <div className="flex gap-3 items-center">
-                        <div className="w-1/3">
-                          <DashboardInput
-                            title="Price"
-                            name="price"
-                            type="number"
-                            value={formData.price}
-                            onChange={(v) =>
-                              setFormData({ ...formData, price: String(v) })
-                            }
-                            required
-                          />
-                        </div>
-                        <div className="w-1/3">
-                          <DashboardInput
-                            title="Stock"
-                            name="stock"
-                            type="number"
-                            value={formData.stock}
-                            onChange={(v) =>
-                              setFormData({ ...formData, stock: String(v) })
-                            }
-                            required
-                          />
-                        </div>
-                        <div className="w-1/3">
-                          <DashboardDropdown
-                            name="condition"
-                            title="Condition"
-                            value={formData.condition}
-                            onChange={(v) =>
-                              setFormData({ ...formData, condition: v })
-                            }
-                            required
-                          >
-                            <DashboardOption value="new" text="New" />
-                            <DashboardOption value="used" text="Used" />
-                          </DashboardDropdown>
-                        </div>
+                      <div className="grid grid-cols-2 gap-5">
+                        {/* ===== CATEGORY ===== */}
+                        <DashboardDropdown
+                          name="category_id"
+                          title="Category"
+                          required
+                          value={formData.category_id}
+                          onChange={handleCategoryChange}
+                        >
+                          {categoriesData.map((c) => (
+                            <DashboardOption
+                              key={c.id}
+                              value={c.id}
+                              text={c.name}
+                            />
+                          ))}
+                        </DashboardDropdown>
+                        {/* ===== BRAND ===== */}
+                        <DashboardDropdown
+                          name="brand_id"
+                          title="Brand"
+                          required
+                          value={formData.brand_id}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              brand_id: e.target.value,
+                            })
+                          }
+                        >
+                          {brands.map((b) => (
+                            <DashboardOption
+                              key={b.id}
+                              value={b.id}
+                              text={b.name}
+                            />
+                          ))}
+                        </DashboardDropdown>
+                      </div>
+                      <div className="border border-zinc-700 my-3"></div>
+                      {/* ===== DIMENSIONS ===== */}
+                      <div className="grid grid-cols-4 gap-5">
+                        <DashboardInput
+                          title="Weight (g)"
+                          name="weight"
+                          type="number"
+                          value={formData.weight}
+                          onChange={(v) =>
+                            setFormData({ ...formData, weight: String(v) })
+                          }
+                        />
+                        <DashboardInput
+                          title="Length (mm)"
+                          name="length"
+                          type="number"
+                          value={formData.length}
+                          onChange={(v) =>
+                            setFormData({ ...formData, length: String(v) })
+                          }
+                        />
+                        <DashboardInput
+                          title="Width (mm)"
+                          name="width"
+                          type="number"
+                          value={formData.width}
+                          onChange={(v) =>
+                            setFormData({ ...formData, width: String(v) })
+                          }
+                        />
+                        <DashboardInput
+                          title="Height (mm)"
+                          name="height"
+                          type="number"
+                          value={formData.height}
+                          onChange={(v) =>
+                            setFormData({ ...formData, height: String(v) })
+                          }
+                        />
+                      </div>
+                      <div className="border border-zinc-700 my-3"></div>
+                      {/* ===== SPECIFICATIONS ===== */}
+                      {availableSpecs.length > 0 && (
+                        <>
+                          <div className="gap-5 grid grid-cols-2">
+                            {availableSpecs.map((spec) => {
+                              // Ambil value dari formData berdasarkan nama spesifikasi
+                              const currentValue =
+                                formData.product_specs?.[spec.name] || "";
+
+                              return (
+                                <div key={spec.id} className="w-full">
+                                  {spec.input_type === "select" ? (
+                                    <DashboardDropdown
+                                      title={spec.name}
+                                      name={`spec_${spec.id}`}
+                                      required
+                                      value={String(currentValue)}
+                                      onChange={(e) =>
+                                        handleSpecChange(
+                                          spec.name,
+                                          e.target.value
+                                        )
+                                      }
+                                    >
+                                      {/* Fallback empty option */}
+                                      <DashboardOption
+                                        value=""
+                                        text={`Select ${spec.name}`}
+                                      />
+                                      {spec.options?.map((opt) => (
+                                        <DashboardOption
+                                          key={opt}
+                                          value={opt}
+                                          text={opt}
+                                        />
+                                      ))}
+                                    </DashboardDropdown>
+                                  ) : (
+                                    <DashboardInput
+                                      title={spec.name}
+                                      name={`spec_${spec.id}`}
+                                      type={spec.input_type}
+                                      required
+                                      value={String(currentValue)}
+                                      onChange={(val) =>
+                                        handleSpecChange(spec.name, String(val))
+                                      }
+                                    />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div className="border border-zinc-700 my-3"></div>
+                        </>
+                      )}
+                      {/* ===== PRICING DETAIL ===== */}
+                      <div className="grid grid-cols-3 gap-5">
+                        <DashboardInput
+                          title="Price"
+                          name="price"
+                          type="number"
+                          value={formData.price}
+                          onChange={(v) =>
+                            setFormData({ ...formData, price: String(v) })
+                          }
+                          required
+                        />
+                        <DashboardInput
+                          title="Stock"
+                          name="stock"
+                          type="number"
+                          value={formData.stock}
+                          onChange={(v) =>
+                            setFormData({ ...formData, stock: String(v) })
+                          }
+                          required
+                        />
+                        <DashboardDropdown
+                          title="Condition"
+                          name="condition"
+                          value={formData.condition}
+                          onChange={(v) =>
+                            setFormData({
+                              ...formData,
+                              condition: v.target.value as "new" | "used",
+                            })
+                          }
+                          required
+                        >
+                          <DashboardOption value="new" text="New" />
+                          <DashboardOption value="used" text="Used" />
+                        </DashboardDropdown>
                       </div>
 
                       <DashboardTextarea
-                        name="description"
                         title="Description"
+                        name="description"
                         value={formData.description}
                         onChange={(v) =>
                           setFormData({ ...formData, description: v })
@@ -530,95 +666,74 @@ export default function DashboardProductCard({
 
                       <ImageUploadForm existingImages={image_urls} />
 
-                      <select
-                        name="status"
-                        defaultValue="active"
-                        className="hidden"
-                      >
-                        <option value="active">Aktif</option>
-                        <option value="inactive">Nonaktif</option>
-                      </select>
-
-                      {/* ==== DISCOUNT ==== */}
                       <DiscountForm
                         discountActive={formData.discount_active}
                         onDiscountActiveChange={(v) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            discount_active: v,
-                            discount_type: v
-                              ? prev.discount_type ?? "percentage"
-                              : null,
-                            discount_value: v ? prev.discount_value : "",
-                          }))
+                          setFormData((p) => ({ ...p, discount_active: v }))
                         }
-                        discountType={formData.discount_type ?? "percentage"}
+                        discountType={formData.discount_type || "percentage"}
                         discountTypeOnChange={(v) =>
-                          setFormData((prev) => ({ ...prev, discount_type: v }))
+                          setFormData((p) => ({ ...p, discount_type: v }))
                         }
                         discountValue={formData.discount_value}
                         discountValueOnChange={(v) =>
-                          setFormData((prev) => ({
-                            ...prev,
+                          setFormData((p) => ({
+                            ...p,
                             discount_value: String(v),
                           }))
                         }
                       />
+
                       <button
                         type="submit"
                         disabled={loading}
-                        className={`px-4 py-2 text-sm font-bold font-fira-code text-zinc-50 bg-teal-400 dark:bg-teal-600 hover:bg-teal-500 rounded ${
-                          loading && "bg-zinc-400 cursor-not-allowed"
-                        }`}
+                        className="w-full py-3 bg-teal-500 text-white font-bold rounded-lg hover:bg-teal-600 transition-colors"
                       >
-                        {loading ? "Updating..." : "Update Product"}
+                        {loading ? "Saving Changes..." : "Save Product"}
                       </button>
                     </DialogCustom>
                   </DialogContent>
                 </Dialog>
-                <Dialog open={openDelete} onOpenChange={setOpenDelete}>
-                  <DialogTrigger asChild>
-                    <button className="p-2 rounded-full shadow bg-rose-400 dark:bg-rose-700 hover:bg-rose-500 transition-colors duration-200 ease-out">
-                      <FaTrash />
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent
-                    className="[&>button]:hidden max-w-sm border-none dark:bg-zinc-800"
-                    onInteractOutside={(e) => e.preventDefault()}
-                  >
-                    <DialogTitle className="hidden">Remove Item</DialogTitle>
-                    <div className="flex justify-center">
-                      <PiWarningCircle className="text-7xl text-rose-500" />
-                    </div>
-                    <div className="text-center">
-                      Are you sure you want to remove <br />
-                      <span className="font-extrabold text-rose-500">
-                        {name}
-                      </span>
-                      <br />
-                      from your cart?
-                    </div>
-                    <div className="my-5 flex justify-between gap-5 w-2/3 mx-auto font-bold">
-                      <button
-                        onClick={() => setOpenDelete(false)}
-                        className="w-full py-2 border border-rose-500 text-rose-500 hover:bg-rose-100 hover:dark:bg-rose-900/20 rounded-md cursor-pointer"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleDelete}
-                        className="w-full py-2 bg-rose-500 hover:bg-rose-500/80 text-white rounded-md cursor-pointer"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+
+                <button
+                  onClick={() => setOpenDelete(true)}
+                  className="p-3 rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-500 hover:scale-110 transition-transform"
+                >
+                  <FaTrash />
+                </button>
               </div>
             </div>
           </div>
         </td>
       </tr>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={openDelete} onOpenChange={setOpenDelete}>
+        <DialogContent className="max-w-xs text-center p-8 border-none dark:bg-zinc-800 rounded-2xl">
+          <PiWarningCircle className="text-6xl text-rose-500 mx-auto mb-4" />
+          <DialogTitle className="text-lg font-bold">
+            Remove Product?
+          </DialogTitle>
+          <p className="text-sm text-zinc-400 mt-2 mb-6">
+            This action cannot be undone. <b>{name}</b> will be permanently
+            deleted.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setOpenDelete(false)}
+              className="flex-1 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDelete}
+              className="flex-1 py-2 rounded-lg bg-rose-500 text-white font-bold"
+            >
+              Delete
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -21,7 +21,7 @@ export default function ProductListSection() {
           New Arrival
         </h1>
         <Link
-          href={"#"}
+          href={"/products"}
           className="flex items-center gap-2 text-sm md:text-base hover:text-teal-500"
         >
           <span>See All</span>

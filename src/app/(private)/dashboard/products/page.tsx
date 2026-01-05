@@ -16,14 +16,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { createClient } from "@/lib/supabase/client";
 import { createProduct } from "@/services/product.service";
 import { uploadProductImage } from "@/services/upload.service";
 import { RootState, store } from "@/store";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { resetImages } from "@/store/slices/imageSlice";
 import { addProduct } from "@/store/slices/productSlice";
+import { SpecKey } from "@/types";
 import slugify from "@/utils/slugify";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import { useSelector } from "react-redux";
 
@@ -40,12 +42,45 @@ export default function ProductPage() {
     "percentage"
   );
   const [discountValue, setDiscountValue] = useState<number | string>(0);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [availableSpecs, setAvailableSpecs] = useState<SpecKey[]>([]);
 
+  const { brands } = useAppSelector((state) => state.brand);
   const { products, isLoading } = useAppSelector((state) => state.product);
+  const { categories } = useAppSelector((state) => state.category);
+
+  const supabase = createClient();
 
   const dispatch = useAppDispatch();
 
+  useEffect(() => {
+    const fetchSpecs = async () => {
+      if (!selectedCategoryId) {
+        setAvailableSpecs([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("spec_keys")
+        .select("*")
+        .eq("category_id", selectedCategoryId);
+
+      if (error) {
+        console.error("Error ambil spek:", error.message);
+        return;
+      }
+      setAvailableSpecs(data || []);
+    };
+
+    fetchSpecs();
+  }, [selectedCategoryId]);
+
   if (!images) return [];
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setSelectedCategoryId(val);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -111,15 +146,30 @@ export default function ProductPage() {
 
       const imageUrls = [...existingUrls, ...uploadedUrls];
 
+      // 1. Ambil Category Name dari List Categories (untuk field 'category' enum)
+      const categoryObj = categories.find((c) => c.id === selectedCategoryId);
+      if (!categoryObj) throw new Error("Silakan pilih kategori yang valid");
+
+      // Casting category name ke literal type yang diharapkan
+      const categoryName = categoryObj.name.toLowerCase() as
+        | "body"
+        | "lens"
+        | "fullset"
+        | "accessories";
+
+      // 2. Kumpulkan Spesifikasi Dinamis (Tipe Record<string, string>)
+      const specs: Record<string, string> = {};
+      availableSpecs.forEach((spec) => {
+        const value = formData.get(`spec_${spec.id}`);
+        if (typeof value === "string" && value.trim() !== "") {
+          specs[spec.name] = value;
+        }
+      });
+
       // ==== INSERT PRODUCT ====
       const newProduct = await createProduct({
         name,
         slug: `${slugify(name)}-${Date.now()}`,
-        category: formData.get("category") as
-          | "body"
-          | "lens"
-          | "fullset"
-          | "accessories",
         price,
         stock,
         description: formData.get("description") as string,
@@ -127,8 +177,17 @@ export default function ProductPage() {
         condition: formData.get("condition") as "new" | "used",
         image_urls: imageUrls,
         discount_type: discountActive ? discountType ?? undefined : undefined,
-        discount_value: discountActive ? discountValue : 0,
+        discount_value: discountActive ? Number(discountValue) : 0,
         discount_active: discountActive,
+
+        category_id: formData.get("category_id") as string,
+        brand_id: formData.get("brand_id") as string,
+        weight: Number(formData.get("weight")),
+        width: Number(formData.get("width")),
+        height: Number(formData.get("height")),
+        length: Number(formData.get("length")),
+        category: categoryName,
+        product_specs: specs,
       });
 
       setAlert({ message: "Product created!", type: "success" });
@@ -183,56 +242,132 @@ export default function ProductPage() {
                 <FaPlus className="text-base" /> Product
               </button>
             </DialogTrigger>
-            <DialogContent className="border-none bg-zinc-50 dark:bg-zinc-800 rounded-xl overflow-y-auto hide-scrollbar">
+            <DialogContent className="max-h-10/12 border-none bg-zinc-50 dark:bg-zinc-800 rounded-xl overflow-y-auto hide-scrollbar">
               <DialogTitle className="font-extrabold font-fira-code">
                 Add Product
               </DialogTitle>
               <DialogCustom onSubmit={handleSubmit}>
-                <div className="flex gap-3 items-center">
-                  <div className="w-2/3">
-                    <DashboardInput
-                      title="Name"
-                      name="name"
-                      type="text"
-                      required
-                    />
-                  </div>
-                  <div className="w-1/3">
-                    <DashboardDropdown
-                      name="category"
-                      title="Category"
-                      required
-                    >
-                      <DashboardOption value="body" text="Body" />
-                      <DashboardOption value="lens" text="Lens" />
-                      <DashboardOption value="fullset" text="Full Set" />
-                      <DashboardOption value="accessories" text="Accessories" />
-                    </DashboardDropdown>
-                  </div>
+                {/* ==== MAIN INFO ==== */}
+                <div className="grid grid-cols-1">
+                  <DashboardInput
+                    title="Product Name"
+                    name="name"
+                    type="text"
+                    required
+                  />
                 </div>
-                <div className="flex gap-3 items-center">
-                  <div className="w-1/3">
-                    <DashboardInput
-                      title="Price"
-                      name="price"
-                      type="number"
-                      required
-                    />
-                  </div>
-                  <div className="w-1/3">
-                    <DashboardInput
-                      title="Stock"
-                      name="stock"
-                      type="number"
-                      required
-                    />
-                  </div>
-                  <div className="w-1/3">
-                    <DashboardDropdown name="condition" title="Condition">
-                      <DashboardOption value="new" text="New" />
-                      <DashboardOption value="used" text="Used" />
-                    </DashboardDropdown>
-                  </div>
+                <div className="grid grid-cols-2 gap-5">
+                  <DashboardDropdown
+                    name="category_id"
+                    title="Category"
+                    required
+                    value={selectedCategoryId}
+                    onChange={handleCategoryChange}
+                  >
+                    {categories.map((c) => (
+                      <DashboardOption key={c.id} value={c.id} text={c.name} />
+                    ))}
+                  </DashboardDropdown>
+
+                  <DashboardDropdown name="brand_id" title="Brand" required>
+                    {brands.map((b) => (
+                      <DashboardOption key={b.id} value={b.id} text={b.name} />
+                    ))}
+                  </DashboardDropdown>
+                </div>
+                <div className="border border-zinc-700 my-3"></div>
+                {/* ===== DIMENSIONS ===== */}
+                <div className="grid grid-cols-4 gap-5">
+                  <DashboardInput
+                    title="Width (mm)"
+                    name="width"
+                    type="number"
+                    required
+                  />
+
+                  <DashboardInput
+                    title="Height (mm)"
+                    name="height"
+                    type="number"
+                    required
+                  />
+
+                  <DashboardInput
+                    title="Length (mm)"
+                    name="length"
+                    type="number"
+                    required
+                  />
+
+                  <DashboardInput
+                    title="Weight (g)"
+                    name="weight"
+                    type="number"
+                    required
+                  />
+                </div>
+                <div className="border border-zinc-700 my-3"></div>
+                {/* ===== SPECIFICATIONS ===== */}
+                {availableSpecs.length > 0 && (
+                  <>
+                    <div className="gap-5 grid grid-cols-2">
+                      {availableSpecs.map((spec) => (
+                        <div key={spec.id} className="w-full">
+                          {spec.input_type === "select" ? (
+                            /* RENDER DROPDOWN JIKA TIPE 'select' */
+                            <DashboardDropdown
+                              title={spec.name}
+                              name={`spec_${spec.id}`}
+                              required
+                            >
+                              {spec.options?.map((opt) => (
+                                <DashboardOption
+                                  key={opt}
+                                  value={opt}
+                                  text={opt}
+                                />
+                              ))}
+                            </DashboardDropdown>
+                          ) : (
+                            /* RENDER INPUT BIASA JIKA TIPE 'text' ATAU 'number' */
+                            <DashboardInput
+                              title={spec.name}
+                              name={`spec_${spec.id}`}
+                              type={spec.input_type} // Bisa 'text' atau 'number'
+                              step={
+                                spec.input_type === "number"
+                                  ? "0.01"
+                                  : undefined
+                              }
+                              required
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="border border-zinc-700 my-3"></div>
+                  </>
+                )}
+                {/* ===== PRICING & STOCK ===== */}
+                <div className="grid grid-cols-3 gap-5">
+                  <DashboardInput
+                    title="Price"
+                    name="price"
+                    type="number"
+                    required
+                  />
+
+                  <DashboardInput
+                    title="Stock"
+                    name="stock"
+                    type="number"
+                    required
+                  />
+
+                  <DashboardDropdown name="condition" title="Condition">
+                    <DashboardOption value="new" text="New" />
+                    <DashboardOption value="used" text="Used" />
+                  </DashboardDropdown>
                 </div>
 
                 <DashboardTextarea
@@ -279,6 +414,7 @@ export default function ProductPage() {
                 <th className="px-6 py-4">Product</th>
                 <th className="px-6 py-4">Category</th>
                 <th className="px-6 py-4">Stock</th>
+                <th className="px-6 py-4">Sold</th>
                 <th className="px-6 py-4">Price</th>
                 <th className="px-6 py-4">Rating</th>
               </tr>
@@ -288,6 +424,14 @@ export default function ProductPage() {
                 <tr>
                   <td colSpan={5}>
                     <Loading />
+                  </td>
+                </tr>
+              ) : products.length === 0 ? (
+                <tr>
+                  <td colSpan={5}>
+                    <div className="py-5">
+                      <p className="text-center">No products found</p>
+                    </div>
                   </td>
                 </tr>
               ) : (

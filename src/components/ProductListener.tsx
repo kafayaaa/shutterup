@@ -13,9 +13,14 @@ export default function ProductListener() {
       try {
         const { data, error } = await supabasePublic
           .from("products")
-          .select("*")
-          .eq("status", "active")
-          .order("created_at", { ascending: false });
+          .select(
+            `
+              *,
+              brands!inner (*),
+              categories!inner (*)
+            `
+          ) // !inner memastikan relasi digunakan secara eksplisit
+          .eq("status", "active");
 
         if (error) {
           console.error("Supabase error:", error);

@@ -1,6 +1,7 @@
 "use client";
 
 import Alert from "@/components/Alert";
+import GlassContainer from "@/components/GlassContainer";
 import Loading from "@/components/Loading";
 import LoadingScreen from "@/components/LoadingScreen";
 import Navbar from "@/components/Navbar";
@@ -160,12 +161,12 @@ export default function OrdersPage() {
         />
       )}
       <Navbar />
-      <div className="w-full max-w-7xl mx-auto">
-        <div className="pt-30 pb-10 w-full space-y-5">
+      <div className="w-full max-w-11/12 md:max-w-7xl mx-auto">
+        <div className="pt-27 md:pt-30 pb-10 w-full space-y-3 md:space-y-5">
           <h1 className="text-2xl font-extrabold font-fira-code">
             Orders List
           </h1>
-          <div className="w-full p-5 flex flex-col gap-5 dark:bg-zinc-800 rounded-md border border-zinc-200 dark:border-none">
+          <div className="w-full flex flex-col gap-5">
             {ordersLoading ? (
               <div className="w-full py-10 flex items-center justify-center">
                 <Loading />
@@ -176,250 +177,255 @@ export default function OrdersPage() {
               </div>
             ) : (
               orders.map((order) => (
-                <div
-                  key={order.id}
-                  className="w-full p-5 flex items-center justify-between gap-5 dark:bg-zinc-700 rounded-md shadow-md"
-                >
-                  <div className="flex flex-col gap-5">
-                    {/* ===== ORDER DETAILS ===== */}
-                    <div className="flex items-center gap-5">
-                      <span className="text-xs font-fira-code">
-                        #{order.id}
-                      </span>
-                      <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                        {new Date(order.created_at).toLocaleDateString(
-                          "en-GB",
-                          {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          }
-                        )}
-                      </span>
-                      <div
-                        className={`text-xs font-bold font-fira-code px-2 py-0.5 rounded ${
-                          order.status === "pending"
-                            ? "bg-yellow-500/20 text-yellow-500"
-                            : order.status === "paid"
-                            ? "bg-emerald-500/20 text-emerald-500"
-                            : order.status === "shipped"
-                            ? "bg-orange-500/20 text-orange-500"
-                            : order.status === "delivered"
-                            ? "bg-sky-500/20 text-sky-500"
-                            : order.status === "canceled"
-                            ? "bg-rose-500/20 text-rose-500"
-                            : ""
-                        }`}
-                      >
-                        {order.status.toUpperCase()}
-                      </div>
-                    </div>
-                    {/* ===== ORDER ITEMS ===== */}
-                    {order.order_items?.map((item) => (
-                      <div key={item.id} className="w-full flex gap-5">
-                        <div className="aspect-square max-h-20">
-                          <Image
-                            src={item.products?.image_urls[0] || ""}
-                            alt={item.products?.name || "Product Image"}
-                            width={160}
-                            height={160}
-                            className="w-full h-full object-cover rounded-md"
-                          />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <h2 className="font-bold">{item.products?.name}</h2>
-                          <span className="font-fira-code text-sm text-zinc-500 dark:text-zinc-400">
-                            {item.quantity} X Rp{" "}
-                            {item.price.toLocaleString("id")}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="min-w-56 self-end flex flex-col gap-5 p-5 border-l border-zinc-200 dark:border-zinc-600">
-                    <div className="flex flex-col">
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        Total Price
-                      </p>
-                      <span className="font-bold font-fira-code">
-                        Rp {order.total_price.toLocaleString("id")}
-                      </span>
-                    </div>
-                    <div>
-                      {/* ==== CANCEL ORDER ==== */}
-                      {order.status !== "delivered" &&
-                        order.status !== "canceled" && (
-                          <Dialog
-                            open={selectedOrderId === order.id}
-                            onOpenChange={(open) =>
-                              setSelectedOrderId(open ? order.id : null)
-                            }
-                          >
-                            {order.cancel_reason ? (
-                              <button className="w-full py-2 bg-zinc-300 text-sm text-zinc-600 font-bold rounded-md cursor-not-allowed">
-                                Request Sent
-                              </button>
-                            ) : (
-                              <DialogTrigger asChild>
-                                <button className="w-full py-2 bg-rose-500 hover:bg-rose-500/75 text-sm text-white font-bold rounded-md cursor-pointer">
-                                  Cancel Order
-                                </button>
-                              </DialogTrigger>
+                <GlassContainer key={order.id}>
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-5">
+                    <div className="flex flex-col gap-5">
+                      {/* ===== ORDER DETAILS ===== */}
+                      <div className="flex flex-col md:flex-row items-start md:items-center gap-5">
+                        <span className="text-xs font-fira-code">
+                          #{order.id}
+                        </span>
+                        <div className="flex items-center gap-5">
+                          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                            {new Date(order.created_at).toLocaleDateString(
+                              "en-GB",
+                              {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              }
                             )}
-                            <DialogContent
-                              className="[&>button]:hidden max-w-sm border-none dark:bg-zinc-800"
-                              onInteractOutside={(e) => e.preventDefault()}
-                            >
-                              <DialogTitle className="hidden">
-                                Remove Item
-                              </DialogTitle>
-                              <div className="flex justify-center">
-                                <PiWarningCircle className="text-7xl text-rose-500" />
-                              </div>
-                              <div className="text-center space-y-2">
-                                <p>Are you sure to cancel your order?</p>
-                                <p className="text-sm">
-                                  Please write down the reason why you want to
-                                  cancel the order.
-                                </p>
-                                <textarea
-                                  value={cancelReasonMessage}
-                                  onChange={(e) =>
-                                    setCancelReasonMessage(e.target.value)
-                                  }
-                                  className="w-full mt-2 h-32 px-4 py-3 text-sm border border-zinc-200 dark:border-zinc-600 rounded-md resize-none"
-                                />
-                              </div>
-                              <div className="my-5 flex justify-between gap-5 w-2/3 mx-auto font-bold">
-                                <button
-                                  onClick={() => setSelectedOrderId(null)}
-                                  className="w-full py-2 border border-rose-500 text-rose-500 hover:bg-rose-100 hover:dark:bg-rose-900/20 rounded-md cursor-pointer"
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  onClick={handleCancelOrder}
-                                  disabled={isSubmitting}
-                                  className="w-full py-2 flex items-center justify-center bg-rose-500 hover:bg-rose-500/80 text-white rounded-md cursor-pointer"
-                                >
-                                  {isSubmitting ? (
-                                    <div className="flex items-center gap-2">
-                                      <div className="relative h-8 w-8 text-3xl">
-                                        <BiCircle className="absolute top-0 left-0 text-white" />
-                                        <BiLoaderAlt className="absolute top-0 left-0 z-10 animate-spin text-rose-500/70" />
-                                      </div>
-                                      <p>Sending...</p>
-                                    </div>
-                                  ) : (
-                                    "Send"
-                                  )}
-                                </button>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        )}
-
-                      {/* ==== REVIEW PRODUCT ==== */}
-                      {order.status === "delivered" && (
-                        <>
-                          {/* Cek apakah order ini sudah pernah direview */}
-                          {productReviews.some(
-                            (r) => r.order_id === order.id
-                          ) ? (
-                            <button
-                              disabled
-                              className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-700 text-sm text-zinc-400 font-bold rounded-md cursor-default flex items-center justify-center gap-2"
-                            >
-                              <MdCheckCircle className="text-lg text-zinc-600" />
-                              Review Submitted
-                            </button>
-                          ) : (
+                          </span>
+                          <div
+                            className={`text-xs font-bold font-fira-code px-2 py-0.5 rounded ${
+                              order.status === "pending"
+                                ? "bg-yellow-500/20 text-yellow-500"
+                                : order.status === "paid"
+                                ? "bg-emerald-500/20 text-emerald-500"
+                                : order.status === "shipped"
+                                ? "bg-orange-500/20 text-orange-500"
+                                : order.status === "delivered"
+                                ? "bg-sky-500/20 text-sky-500"
+                                : order.status === "canceled"
+                                ? "bg-rose-500/20 text-rose-500"
+                                : ""
+                            }`}
+                          >
+                            {order.status.toUpperCase()}
+                          </div>
+                        </div>
+                      </div>
+                      {/* ===== ORDER ITEMS ===== */}
+                      {order.order_items?.map((item) => (
+                        <div key={item.id} className="w-full flex gap-5">
+                          <div className="aspect-square max-h-20">
+                            <Image
+                              src={item.products?.image_urls[0] || ""}
+                              alt={item.products?.name || "Product Image"}
+                              width={160}
+                              height={160}
+                              className="w-full h-full object-cover rounded-md"
+                            />
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <h2 className="font-bold">{item.products?.name}</h2>
+                            <span className="font-fira-code text-sm text-zinc-500 dark:text-zinc-400">
+                              {item.quantity} X Rp{" "}
+                              {item.price.toLocaleString("id")}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="w-full md:w-fit md:min-w-56 self-end flex flex-col gap-5 pt-5 md:pt-0 md:p-5 md:border-l border-zinc-200 dark:border-zinc-600">
+                      <div className="flex flex-col">
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                          Total Price
+                        </p>
+                        <span className="font-bold font-fira-code">
+                          Rp {order.total_price.toLocaleString("id")}
+                        </span>
+                      </div>
+                      <div>
+                        {/* ==== CANCEL ORDER ==== */}
+                        {order.status !== "delivered" &&
+                          order.status !== "canceled" && (
                             <Dialog
                               open={selectedOrderId === order.id}
                               onOpenChange={(open) =>
                                 setSelectedOrderId(open ? order.id : null)
                               }
                             >
-                              <DialogTrigger asChild>
-                                <button className="w-full py-2 bg-teal-500 hover:bg-teal-500/80 text-sm text-white font-bold rounded-md cursor-pointer flex items-center justify-center gap-2">
-                                  <MdRateReview className="text-lg" />
-                                  Review
+                              {order.cancel_reason ? (
+                                <button className="w-full py-2 bg-zinc-300 text-sm text-zinc-600 font-bold rounded-md cursor-not-allowed">
+                                  Request Sent
                                 </button>
-                              </DialogTrigger>
-
-                              <DialogContent className="max-w-md border-none dark:bg-zinc-800">
-                                <DialogTitle className="text-xl font-bold font-fira-code">
-                                  Give Your Review
-                                </DialogTitle>
-
-                                <div className="space-y-4 py-4">
-                                  {/* Rating Stars */}
-                                  <div className="flex flex-col items-center gap-2">
-                                    <p className="text-sm font-medium">
-                                      How was the product?
-                                    </p>
-                                    <div className="flex gap-2">
-                                      {[1, 2, 3, 4, 5].map((star) => (
-                                        <button
-                                          key={star}
-                                          onClick={() => setRating(star)}
-                                          className={`text-3xl cursor-pointer ${
-                                            rating >= star
-                                              ? "text-yellow-400"
-                                              : "text-zinc-400"
-                                          }`}
-                                        >
-                                          {rating >= star ? (
-                                            <AiFillStar />
-                                          ) : (
-                                            <AiOutlineStar />
-                                          )}
-                                        </button>
-                                      ))}
-                                    </div>
+                              ) : (
+                                <DialogTrigger asChild>
+                                  <button className="w-full py-2 bg-rose-500 hover:bg-rose-500/75 text-sm text-white font-bold rounded-md cursor-pointer">
+                                    Cancel Order
+                                  </button>
+                                </DialogTrigger>
+                              )}
+                              <DialogContent
+                                className="[&>button]:hidden max-w-sm border-none bg-transparent"
+                                onInteractOutside={(e) => e.preventDefault()}
+                              >
+                                <GlassContainer>
+                                  <DialogTitle className="hidden">
+                                    Remove Item
+                                  </DialogTitle>
+                                  <div className="flex justify-center">
+                                    <PiWarningCircle className="text-7xl text-rose-500" />
                                   </div>
-
-                                  {/* Comment Box */}
-                                  <div className="space-y-2">
-                                    <label className="text-sm">
-                                      Your Experience
-                                    </label>
+                                  <div className="text-center space-y-2">
+                                    <p>Are you sure to cancel your order?</p>
+                                    <p className="text-sm">
+                                      Please write down the reason why you want
+                                      to cancel the order.
+                                    </p>
                                     <textarea
-                                      placeholder="Share your experience about this product..."
-                                      value={reviewMessage}
+                                      value={cancelReasonMessage}
                                       onChange={(e) =>
-                                        setReviewMessage(e.target.value)
+                                        setCancelReasonMessage(e.target.value)
                                       }
-                                      className="w-full h-32 px-4 py-3 text-sm border border-zinc-200 dark:border-zinc-600 rounded-md resize-none focus:ring-2 focus:ring-teal-500 outline-none"
+                                      className="w-full mt-2 h-32 px-4 py-3 text-sm border border-zinc-200 dark:border-zinc-600 rounded-md resize-none"
                                     />
                                   </div>
-                                </div>
-
-                                <div className="flex justify-end gap-3 font-bold">
-                                  <button
-                                    onClick={() => handleAddReview(order)}
-                                    disabled={
-                                      isSubmitting ||
-                                      rating === 0 ||
-                                      reviewMessage.length < 5
-                                    }
-                                    className="px-6 py-2 bg-teal-500 hover:bg-teal-500/80 text-white rounded-md disabled:bg-zinc-300 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
-                                  >
-                                    {isSubmitting ? (
-                                      <BiLoaderAlt className="animate-spin" />
-                                    ) : (
-                                      "Submit Review"
-                                    )}
-                                  </button>
-                                </div>
+                                  <div className="my-5 flex justify-between gap-5 w-2/3 mx-auto font-bold">
+                                    <button
+                                      onClick={() => setSelectedOrderId(null)}
+                                      className="w-full py-2 border border-rose-500 text-rose-500 hover:bg-rose-100 hover:dark:bg-rose-900/20 rounded-md cursor-pointer"
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      onClick={handleCancelOrder}
+                                      disabled={isSubmitting}
+                                      className="w-full py-2 flex items-center justify-center bg-rose-500 hover:bg-rose-500/80 text-white rounded-md cursor-pointer"
+                                    >
+                                      {isSubmitting ? (
+                                        <div className="flex items-center gap-2">
+                                          <div className="relative h-8 w-8 text-3xl">
+                                            <BiCircle className="absolute top-0 left-0 text-white" />
+                                            <BiLoaderAlt className="absolute top-0 left-0 z-10 animate-spin text-rose-500/70" />
+                                          </div>
+                                          <p>Sending...</p>
+                                        </div>
+                                      ) : (
+                                        "Send"
+                                      )}
+                                    </button>
+                                  </div>
+                                </GlassContainer>
                               </DialogContent>
                             </Dialog>
                           )}
-                        </>
-                      )}
+
+                        {/* ==== REVIEW PRODUCT ==== */}
+                        {order.status === "delivered" && (
+                          <>
+                            {/* Cek apakah order ini sudah pernah direview */}
+                            {productReviews.some(
+                              (r) => r.order_id === order.id
+                            ) ? (
+                              <button
+                                disabled
+                                className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-700 text-sm text-zinc-400 font-bold rounded-md cursor-default flex items-center justify-center gap-2"
+                              >
+                                <MdCheckCircle className="text-lg text-zinc-600" />
+                                Review Submitted
+                              </button>
+                            ) : (
+                              <Dialog
+                                open={selectedOrderId === order.id}
+                                onOpenChange={(open) =>
+                                  setSelectedOrderId(open ? order.id : null)
+                                }
+                              >
+                                <DialogTrigger asChild>
+                                  <button className="w-full py-2 bg-teal-500 hover:bg-teal-500/80 text-sm text-white font-bold rounded-md cursor-pointer flex items-center justify-center gap-2">
+                                    <MdRateReview className="text-lg" />
+                                    Review
+                                  </button>
+                                </DialogTrigger>
+
+                                <DialogContent className="max-w-md border-none bg-transparent">
+                                  <GlassContainer>
+                                    <DialogTitle className="text-xl font-bold font-fira-code">
+                                      Give Your Review
+                                    </DialogTitle>
+
+                                    <div className="space-y-4 py-4">
+                                      {/* Rating Stars */}
+                                      <div className="flex flex-col items-center gap-2">
+                                        <p className="text-sm font-medium">
+                                          How was the product?
+                                        </p>
+                                        <div className="flex gap-2">
+                                          {[1, 2, 3, 4, 5].map((star) => (
+                                            <button
+                                              key={star}
+                                              onClick={() => setRating(star)}
+                                              className={`text-3xl cursor-pointer ${
+                                                rating >= star
+                                                  ? "text-yellow-400"
+                                                  : "text-zinc-400"
+                                              }`}
+                                            >
+                                              {rating >= star ? (
+                                                <AiFillStar />
+                                              ) : (
+                                                <AiOutlineStar />
+                                              )}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+
+                                      {/* Comment Box */}
+                                      <div className="space-y-2">
+                                        <label className="text-sm">
+                                          Your Experience
+                                        </label>
+                                        <textarea
+                                          placeholder="Share your experience about this product..."
+                                          value={reviewMessage}
+                                          onChange={(e) =>
+                                            setReviewMessage(e.target.value)
+                                          }
+                                          className="w-full h-32 px-4 py-3 text-sm border border-zinc-200 dark:border-zinc-600 rounded-md resize-none focus:ring-2 focus:ring-teal-500 outline-none"
+                                        />
+                                      </div>
+                                    </div>
+
+                                    <div className="flex justify-end gap-3 font-bold">
+                                      <button
+                                        onClick={() => handleAddReview(order)}
+                                        disabled={
+                                          isSubmitting ||
+                                          rating === 0 ||
+                                          reviewMessage.length < 5
+                                        }
+                                        className="px-6 py-2 bg-teal-500 hover:bg-teal-500/80 text-white rounded-md disabled:bg-zinc-300 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
+                                      >
+                                        {isSubmitting ? (
+                                          <BiLoaderAlt className="animate-spin" />
+                                        ) : (
+                                          "Submit Review"
+                                        )}
+                                      </button>
+                                    </div>
+                                  </GlassContainer>
+                                </DialogContent>
+                              </Dialog>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </GlassContainer>
               ))
             )}
           </div>

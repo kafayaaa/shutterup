@@ -30,9 +30,9 @@ export default function DetailProduct({ product }: { product: Product }) {
   const [quantity, setQuantity] = useState(1);
   const [addToCartloading, setAddToCartLoading] = useState(false);
   const [buyNowloading, setBuyNowLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(product.image_urls[0]);
 
   const reviews = productReviews.filter((r) => r.product_id === product.id);
-  console.log(reviews);
 
   useEffect(() => {
     getCart().then((items) => {
@@ -127,7 +127,7 @@ export default function DetailProduct({ product }: { product: Product }) {
   return (
     <div className="w-full">
       <Navbar />
-      <div className="w-full max-w-7xl mx-auto pt-30 pb-10 grid grid-cols-2 gap-5">
+      <div className="w-full max-w-11/12 md:max-w-7xl mx-auto pt-28 md:pt-40 pb-20 grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* ===== ALERT ===== */}
         {showAlert && (
           <Alert
@@ -138,17 +138,40 @@ export default function DetailProduct({ product }: { product: Product }) {
           />
         )}
         {/* ===== IMAGES SECTION ===== */}
-        <div className="col-span-1 w-full grid grid-cols-2 gap-3">
-          {product.image_urls.map((url, index) => (
+        <div className="col-span-1 w-full flex flex-col gap-4">
+          {/* AREA GAMBAR BESAR */}
+          <div className="w-full aspect-square overflow-hidden rounded-2xl bg-zinc-800/50 border border-white/10">
             <Image
-              key={index}
-              src={url}
+              src={selectedImage}
               alt={product.name}
-              width={300}
-              height={300}
-              className="w-full h-full max-h-80 object-cover object-center rounded-lg"
+              width={800}
+              height={800}
+              className="w-full h-full object-cover object-center transition-all duration-500"
             />
-          ))}
+          </div>
+
+          {/* LIST THUMBNAILS */}
+          <div className="w-full flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {product.image_urls.map((url, index) => (
+              <div
+                key={index}
+                onClick={() => setSelectedImage(url)} // Klik untuk ganti gambar besar
+                className={`aspect-square w-20 md:min-w-20 cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                  selectedImage === url
+                    ? "border-teal-500 scale-95"
+                    : "border-transparent opacity-60 hover:opacity-100"
+                }`}
+              >
+                <Image
+                  src={url}
+                  alt={`${product.name} preview ${index}`}
+                  width={100}
+                  height={100}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="col-span-1 flex flex-col">
@@ -167,7 +190,7 @@ export default function DetailProduct({ product }: { product: Product }) {
               <span className="ml-0.5 text-zinc-400 dark:text-zinc-500">
                 ({product.review_count})
               </span>
-              <span className="ml-3">{product.sold} terjual</span>
+              <span className="ml-3">{product.sold} sold</span>
             </div>
             {/* ===== PRODUCT PRICE ===== */}
             <div className="flex items-center gap-2">
@@ -222,10 +245,8 @@ export default function DetailProduct({ product }: { product: Product }) {
               <button
                 onClick={handleAddToCart}
                 disabled={addToCartloading}
-                className={`w-full py-2 flex items-center justify-center text-sm rounded-lg font-extrabold ${
-                  addToCartloading || buyNowloading
-                    ? "pointer-events-none bg-zinc-300 text-zinc-600"
-                    : "text-zinc-50 bg-teal-500 hover:bg-teal-500/80 cursor-pointer"
+                className={`w-full py-2 flex items-center justify-center text-sm rounded-lg font-extrabold text-zinc-50 bg-teal-500 hover:bg-teal-500/80 ${
+                  addToCartloading ? "pointer-events-none" : " cursor-pointer"
                 }`}
               >
                 {addToCartloading ? (
@@ -243,10 +264,8 @@ export default function DetailProduct({ product }: { product: Product }) {
               <button
                 onClick={handleBuyNow}
                 disabled={buyNowloading}
-                className={`w-full flex items-center justify-center py-2 text-sm border-2 rounded-lg font-extrabold ${
-                  addToCartloading || buyNowloading
-                    ? "pointer-events-none bg-zinc-300 text-zinc-600"
-                    : "text-teal-500 border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-950/30 cursor-pointer"
+                className={`w-full flex items-center justify-center py-2 text-sm border-2 rounded-lg font-extrabold text-teal-500 border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-950/30 ${
+                  buyNowloading ? "pointer-events-none" : "cursor-pointer"
                 }`}
               >
                 {buyNowloading ? (
@@ -263,23 +282,73 @@ export default function DetailProduct({ product }: { product: Product }) {
               </button>
             </div>
             {/* ===== PRODUCT DESCRIPTION ===== */}
-            <div className="pb-5 border-b border-zinc-200">
+            <div className="pb-5 border-b border-zinc-700">
               <h2 className="font-bold">Detail Product</h2>
               <p className="text-sm ">{product.description}</p>
+            </div>
+            {/* ===== PRODUCT DIMENSIONS & WEIGHT ===== */}
+            <div className="pb-5">
+              <h2 className="font-bold mb-2">Dimensions & Weight</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 md:gap-y-2 text-sm">
+                <div className="flex justify-between border-b border-zinc-700/50 pb-1">
+                  <span className="text-zinc-400 text-xs uppercase">
+                    WEIGHT
+                  </span>
+                  <span className="text-zinc-200 font-medium text-sm">
+                    {product.weight}g
+                  </span>
+                </div>
+                <div className="flex justify-between border-b border-zinc-700/50 pb-1">
+                  <span className="text-zinc-400 text-xs uppercase">
+                    Size (l x w x h)
+                  </span>
+                  <span className="text-zinc-200 font-medium text-sm">
+                    {product.length} x {product.width} x {product.height} mm
+                  </span>
+                </div>
+              </div>
+            </div>
+            {/* ===== PRODUCT SPECIFICATIONS ===== */}
+            <div className="pb-5">
+              <h2 className="font-bold mb-3">Specifications</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 md:gap-y-2">
+                {product.product_specs &&
+                Object.keys(product.product_specs).length > 0 ? (
+                  Object.entries(product.product_specs).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="flex justify-between border-b border-zinc-700/50 pb-1"
+                    >
+                      <span className="text-zinc-400 text-xs uppercase">
+                        {key}
+                      </span>
+                      <span className="text-zinc-200 font-medium text-sm">
+                        {String(value)}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-zinc-500 italic text-xs">
+                    No specifications available
+                  </p>
+                )}
+              </div>
             </div>
             {/* ===== PRODUCT REVIEWS ===== */}
             <div className="flex flex-col">
               <div>
                 <h1 className="font-bold">Reviews</h1>
               </div>
-              <div className="pb-5 border-b border-zinc-200 flex flex-col gap-1">
-                <span className="text-sm text-zinc-600">Overall Rating</span>
-                <ProductRating
-                  rating={product.average_rating}
-                  count={product.review_count}
-                  size={25}
-                />
-              </div>
+              {reviews.length > 0 && (
+                <div className="pb-5 border-b border-zinc-200 flex flex-col gap-1">
+                  <span className="text-sm text-zinc-600">Overall Rating</span>
+                  <ProductRating
+                    rating={product.average_rating}
+                    count={product.review_count}
+                    size={25}
+                  />
+                </div>
+              )}
               <div className="flex flex-col gap-6 mt-4">
                 {reviews.length > 0 ? (
                   reviews.map((item) => (
@@ -319,7 +388,7 @@ export default function DetailProduct({ product }: { product: Product }) {
                   ))
                 ) : (
                   <p className="text-zinc-500 text-sm">
-                    Belum ada ulasan untuk produk ini.
+                    There is no reviews yet.
                   </p>
                 )}
               </div>
