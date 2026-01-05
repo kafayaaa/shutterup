@@ -13,9 +13,10 @@ import {
 } from "@/components/ui/dialog";
 import { useAppSelector } from "@/store/hooks";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { FaFilter } from "react-icons/fa6";
 
-export default function ProductsPage() {
+function ProductsContent() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search")?.toLowerCase() || "";
   const brandFilter = searchParams.get("brand")?.split(",") || [];
@@ -92,5 +93,19 @@ export default function ProductsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full h-screen flex items-center justify-center">
+          <Loading />
+        </div>
+      }
+    >
+      <ProductsContent />
+    </Suspense>
   );
 }
