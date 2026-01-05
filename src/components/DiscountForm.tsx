@@ -39,7 +39,10 @@ export default function DiscountForm({
               name="discount_type"
               title="Discount Type"
               value={discountType}
-              onChange={discountTypeOnChange}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                const val = e.target.value as "fixed" | "percentage";
+                discountTypeOnChange(val);
+              }}
             >
               <DashboardOption value="percentage" text="Percentage" />
               <DashboardOption value="fixed" text="Nominal" />

@@ -6,12 +6,52 @@ export interface UserProfile {
   avatar_url: string;
 }
 
+export interface Brand {
+  id: string;
+  name: string;
+  logo_url?: string;
+  created_at?: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  created_at?: string;
+  spec_keys?: SpecKey[];
+}
+
+export interface SpecKey {
+  id: string;
+  name: string;
+  category_id: string;
+  input_type: "text" | "number" | "select";
+  options?: string[] | null;
+}
+
+export interface ProductSpec {
+  id?: string;
+  product_id?: string;
+  spec_key_id: string;
+  value: string;
+  spec_keys?: {
+    name: string;
+  };
+}
+
 export interface Product {
   id: string;
   user_id: string;
   name: string;
   slug: string;
-  category: "body" | "lens" | "fullset" | "accessories";
+  brand_id: string;
+  brands?: Brand;
+  width: number;
+  height: number;
+  length: number;
+  weight: number;
+  category_id: string;
+  categories?: Category;
+  specs: ProductSpec[];
   price: number;
   stock: number;
   image_urls: string[];
@@ -25,6 +65,7 @@ export interface Product {
   discount_value: number | string;
   discount_active: boolean;
   final_price: number;
+  product_specs?: Record<string, string | number>;
   created_at: string;
   updated_at: string;
 }
@@ -33,17 +74,23 @@ export interface CreateProductInput {
   name: string;
   slug: string;
   category: "body" | "lens" | "fullset" | "accessories";
+  category_id: string;
+  brand_id: string;
   price: number;
   stock: number;
-  image_urls?: string[];
-  description?: string;
+  description: string;
   status: "active" | "inactive";
   condition: "new" | "used";
-  discount_type?: "percentage" | "fixed" | null;
-  discount_value?: number;
-  discount_active?: boolean;
+  image_urls: string[];
+  weight: number;
+  width: number;
+  height: number;
+  length: number;
+  discount_type?: "percentage" | "fixed";
+  discount_value: number;
+  discount_active: boolean;
+  product_specs?: Record<string, string | number>;
 }
-
 export type UpdateProductPayload = Omit<Product, "user_id">;
 
 export interface CartItem {
@@ -120,6 +167,7 @@ export interface Order {
     postal_code: string;
   };
   has_review?: boolean;
+  user?: UserProfile;
 }
 
 export interface Review {
@@ -141,4 +189,26 @@ export interface Review {
   products?: {
     name: string;
   };
+}
+
+// Tambahkan interface ini di file types Anda atau di atas service
+export interface PostgrestError {
+  message: string;
+  details: string;
+  hint: string;
+  code: string;
+}
+
+export interface DashboardStats {
+  revenue: number;
+  orderCount: number;
+  avgRating: string | number;
+  lowStockItems: number;
+}
+
+export interface DashboardData {
+  stats: DashboardStats;
+  recentOrders: Order[];
+  lowStock: Product[];
+  topSelling: Product[];
 }

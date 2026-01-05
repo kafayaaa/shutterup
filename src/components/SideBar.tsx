@@ -10,13 +10,49 @@ import { BiReceipt } from "react-icons/bi";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { useState } from "react";
 import { IoClose } from "react-icons/io5";
+import { MdOutlineBrandingWatermark, MdOutlineCategory } from "react-icons/md";
 
 export default function SideBar() {
   const pathname = usePathname();
   const isDashboard = pathname === "/dashboard";
+  const isBrands = pathname.includes("brands");
+  const isCategories = pathname.includes("categories");
   const isProducts = pathname.includes("products");
   const isOrders = pathname.includes("orders");
   const [isOpen, setIsOpen] = useState(false);
+
+  const links = [
+    {
+      href: "/dashboard",
+      icon: <RiHomeLine className="text-lg" />,
+      text: "Dashboard",
+      isActive: isDashboard,
+    },
+    {
+      href: "/dashboard/brands",
+      icon: <MdOutlineBrandingWatermark className="text-lg" />,
+      text: "Brands",
+      isActive: isBrands,
+    },
+    {
+      href: "/dashboard/categories",
+      icon: <MdOutlineCategory className="text-lg" />,
+      text: "Categories",
+      isActive: isCategories,
+    },
+    {
+      href: "/dashboard/products",
+      icon: <BsBox className="text-lg" />,
+      text: "Products",
+      isActive: isProducts,
+    },
+    {
+      href: "/dashboard/orders",
+      icon: <BiReceipt className="text-lg" />,
+      text: "Orders",
+      isActive: isOrders,
+    },
+  ];
   return (
     <div className="z-40 w-full lg:h-screen p-5 lg:border-r border-zinc-200 dark:border-zinc-800">
       <div className="lg:h-full flex lg:flex-col justify-between lg:justify-start items-center gap-5 ">
@@ -27,29 +63,20 @@ export default function SideBar() {
           {/* ===== DEKSTOP ===== */}
           <div className="h-full flex flex-col justify-between">
             <div className="flex flex-col gap-2">
-              <DashboardButton
-                href="/dashboard"
-                icon={<RiHomeLine className="text-lg" />}
-                text="Dashboard"
-                isActive={isDashboard}
-              />
-              <DashboardButton
-                href="/dashboard/products"
-                icon={<BsBox className="text-lg" />}
-                text="Products"
-                isActive={isProducts}
-              />
-              <DashboardButton
-                href="/dashboard/orders"
-                icon={<BiReceipt className="text-lg" />}
-                text="Orders"
-                isActive={isOrders}
-              />
+              {links.map((link) => (
+                <DashboardButton
+                  key={link.href}
+                  href={link.href}
+                  icon={link.icon}
+                  text={link.text}
+                  isActive={link.isActive}
+                />
+              ))}
             </div>
             <div className="self-center flex justify-center items-center gap-2">
-              <div className="w-fit">
+              {/* <div className="w-fit">
                 <ToggleTheme />
-              </div>
+              </div> */}
               <LogoutButton />
             </div>
           </div>

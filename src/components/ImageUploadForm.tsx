@@ -120,7 +120,7 @@ export default function ImageUploadForm({ existingImages }: Props) {
               <button
                 type="button"
                 onClick={() => dispatch(removeImage(image.id))}
-                className="absolute top-1 right-1 bg-white p-2 rounded-full shadow"
+                className="absolute top-1 right-1 bg-white p-2 rounded-full shadow cursor-pointer"
               >
                 <FaTrash className="text-sm text-rose-500" />
               </button>

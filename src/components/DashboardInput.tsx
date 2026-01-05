@@ -12,6 +12,8 @@ interface Props<T extends keyof InputValueMap> {
   type: T;
   value?: InputValueMap[T];
   required?: boolean;
+  defaultValue?: string;
+  step?: string;
   onChange?: (value: InputValueMap[T]) => void;
 }
 
@@ -21,6 +23,8 @@ export default function DashboardInput<T extends keyof InputValueMap>({
   type,
   value,
   required,
+  defaultValue,
+  step,
   onChange,
 }: Props<T>) {
   return (
@@ -34,6 +38,8 @@ export default function DashboardInput<T extends keyof InputValueMap>({
         type={type}
         value={value}
         required={required}
+        defaultValue={defaultValue}
+        step={step || "1"}
         onChange={(e) =>
           onChange?.(
             type === "number"

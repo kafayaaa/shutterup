@@ -8,6 +8,8 @@ import ProductListener from "@/components/ProductListener";
 import CartListener from "@/components/CartListener";
 import AddressListener from "@/components/AddressListener";
 import OrderListener from "@/components/OrderListener";
+import BrandListener from "@/components/BrandListener";
+import CategoriesListener from "@/components/CategoriesListener";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
@@ -35,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="light" suppressHydrationWarning>
       <body
-        className={`${plusJakartaSans.variable} ${firaCode.variable} font-plus-jakarta-sans antialiased bg-zinc-800 text-zinc-50`}
+        className={`${plusJakartaSans.variable} ${firaCode.variable} font-plus-jakarta-sans antialiased bg-zinc-800 text-zinc-50 overflow-y-scroll`}
       >
         <ThemeProvider>
           <ReduxProvider>
@@ -44,6 +46,8 @@ export default function RootLayout({
             <CartListener />
             <AddressListener />
             <OrderListener />
+            <BrandListener />
+            <CategoriesListener />
             {children}
           </ReduxProvider>
         </ThemeProvider>

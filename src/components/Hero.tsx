@@ -20,7 +20,7 @@ export default function Hero() {
         </h1>
         <div className="w-full flex flex-col items-center gap-10">
           <AnimatedTagline />
-          <Link href="#content" className="hover:bg-white/25 p-2 rounded-full">
+          <Link href="#promo" className="hover:bg-white/25 p-2 rounded-full">
             <FaArrowDown className="text-2xl md:text-4xl" />
           </Link>
         </div>
